@@ -21,3 +21,7 @@ jira:
   project: PROJ
   email: you@example.com
   token: ${JIRA_API_TOKEN}        # create the token at id.atlassian.com/manage-profile/security/api-tokens
+  transitions:
+    done:                         # workflow-specific transition ID for "Done". Discover yours with:
+                                  #   curl -u <email>:<token> https://<your-workspace>.atlassian.net/rest/api/3/issue/<TICKET>/transitions
+                                  # If empty, /nova-wrap will ask interactively the first time.

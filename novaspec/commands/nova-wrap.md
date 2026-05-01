@@ -68,7 +68,19 @@ Create the PR with `gh pr create --base <resolved-base> --title "<title>"
 
 ### 7. Close the ticket in Jira
 
-If `novaspec/config.yml` has `jira.skill` set, invoke the `jira-integration` skill to transition the ticket to "Done":
+If `novaspec/config.yml` has `jira.skill` set, invoke the `jira-integration` skill to transition the ticket to "Done".
+
+Read `jira.transitions.done` from the config — it's the workflow-specific transition ID. **If missing or empty**, list the available transitions and ask the user which one means "Done" (one-time setup) before proceeding:
+
+```bash
+# One-time discovery
+curl -s -u "<email>:<token>" \
+  "https://<jira-url>/rest/api/3/issue/<TICKET-ID>/transitions"
+```
+
+After confirming the ID, recommend the user save it under `jira.transitions.done` in `novaspec/config.yml` so this step doesn't ask again.
+
+Then transition the ticket:
 
 ```bash
 AUTH=$(echo -n "<email>:<token>" | base64)
@@ -76,7 +88,7 @@ curl -s -X POST \
   -H "Authorization: Basic $AUTH" \
   -H "Content-Type: application/json" \
   "https://<jira-url>/rest/api/3/issue/<TICKET-ID>/transitions" \
-  -d '{"transition": {"id": "41"}}'
+  -d '{"transition": {"id": "<jira.transitions.done>"}}'
 ```
 
 Confirm to the user: "Ticket <TICKET-ID> marked as Done in Jira ✓"
