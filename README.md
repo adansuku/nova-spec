@@ -4,7 +4,13 @@
 
 <p align="center">
   <strong>Spec-Driven Development on top of Claude Code.</strong><br>
-  From a Jira ticket to a merged PR in explicit steps, with architectural memory that doesn't decay.
+  From a ticket to a merged PR in explicit steps, with architectural memory that doesn't decay.
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+  <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-orange.svg">
+  <img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code-purple.svg">
 </p>
 
 ---
@@ -14,6 +20,14 @@
 `nova-spec` adds seven `/nova-*` commands to Claude Code that turn a ticket into a traceable change: classify, close requirements, plan, implement task by task, review, and wrap up with commit + PR + memory update. Memory (`context/decisions/`, `context/gotchas/`, `context/services/`) lives in atomic markdown files that humans edit and `grep` finds.
 
 It's not a template or a generator. It's a set of conventions + commands that Claude Code runs as slash commands inside your repo.
+
+## Who is this for
+
+- Developers using **Claude Code** (or OpenCode) on real projects, not toy demos.
+- Teams that want their AI agent to follow a **disciplined ticket → PR flow** instead of one-shotting code.
+- Anyone tired of **re-explaining the same architectural context** every new chat.
+
+If you only use Claude Code for one-off scripts, this is overkill. If you ship to production with it, read on.
 
 ## Why it exists
 
@@ -35,6 +49,30 @@ claude
 ```
 
 Full details in [INSTALL.md](./INSTALL.md).
+
+## A taste of it
+
+What `/nova-start PROJ-42` actually does:
+
+```text
+> /nova-start PROJ-42
+
+Ticket: PROJ-42 — "Add rate limiting to /api/login"
+Classification: feature (2h-3d)
+Affected services: auth-api ✓
+
+Branch created: feature/PROJ-42-rate-limit-login (from main)
+
+Loaded context:
+  Services: auth-api ✓
+  Decisions read: throttling-strategy.md, redis-usage.md
+  Gaps: none
+  Questions: none
+
+Next step: /nova-spec
+```
+
+No code yet. The agent has classified the work, created the branch, and pulled in only the architectural decisions that matter for this ticket. From here you'd move on to `/nova-spec` to close requirements, then `/nova-plan`, then `/nova-build`.
 
 ## Flow
 
@@ -75,4 +113,4 @@ Full details in [INSTALL.md](./INSTALL.md).
 
 ## License
 
-MIT — see `LICENSE`.
+MIT — see [LICENSE](./LICENSE).
