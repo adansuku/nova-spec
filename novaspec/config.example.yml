@@ -1,0 +1,23 @@
+# nova-spec — framework configuration (template)
+# Copy this file to novaspec/config.yml and fill in your data.
+# novaspec/config.yml is gitignored; don't push it to the repo.
+
+branch:
+  pattern: "{type}/{ticket}-{slug}"
+  types:
+    bugfix: bugfix
+    hotfix: hotfix
+    feature: feature
+    documentation: docs
+    refactor: refactor
+    chore: chore
+    architecture: arch
+  ticket_case: upper    # upper | lower
+  base: main            # base branch of the flow (checkout in /nova-start, --base in /nova-wrap)
+
+jira:
+  skill: ""                       # name of the skill to fetch tickets; leave empty to disable
+  url: https://your-workspace.atlassian.net
+  project: PROJ
+  email: you@example.com
+  token: ${JIRA_API_TOKEN}        # create the token at id.atlassian.com/manage-profile/security/api-tokens
