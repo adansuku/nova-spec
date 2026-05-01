@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" role="img" aria-label="novaspec icon">
+  <title>novaspec</title>
+  <style>
+    .flow-line { stroke: #534AB7; stroke-width: 4; }
+    .flow-dot-small { fill: #AFA9EC; }
+    .flow-dot-big { fill: #534AB7; }
+    .flow-nova { fill: none; stroke: #7F77DD; stroke-width: 4; }
+    @media (prefers-color-scheme: dark) {
+      .flow-line { stroke: #CECBF6; }
+      .flow-dot-small { fill: #AFA9EC; }
+      .flow-dot-big { fill: #CECBF6; }
+      .flow-nova { stroke: #AFA9EC; }
+    }
+  </style>
+
+  <g transform="translate(120, 120)">
+    <line class="flow-line" x1="-85" y1="0" x2="85" y2="0"/>
+    <circle class="flow-dot-small" cx="-85" cy="0" r="9"/>
+    <circle class="flow-dot-small" cx="-51" cy="0" r="9"/>
+    <circle class="flow-dot-small" cx="-17" cy="0" r="9"/>
+    <circle class="flow-dot-small" cx="17" cy="0" r="9"/>
+    <circle class="flow-dot-small" cx="51" cy="0" r="9"/>
+    <circle class="flow-nova" cx="85" cy="0" r="32"/>
+    <circle class="flow-nova" cx="85" cy="0" r="18" opacity="0.5"/>
+    <circle class="flow-dot-big" cx="85" cy="0" r="9"/>
+  </g>
+</svg>

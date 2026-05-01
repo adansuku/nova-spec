@@ -1,0 +1,9 @@
+context/backlog/*
+.claude/*
+.opencode/*
+.env
+novaspec/config.yml
+notes.md
+.DS_Store
+*.swp
+*.swo
