@@ -3,6 +3,7 @@ context/backlog/*
 .opencode/*
 .env
 novaspec/config.yml
+novaspec/custom/
 notes.md
 .DS_Store
 *.swp
@@ -10,3 +11,4 @@ notes.md
 CLAUDE.md
 _bmad/*
 _bmad-output/*
+node_modules/
