@@ -3,52 +3,48 @@
 </p>
 
 <p align="center">
-  <strong>Spec-Driven Development on top of Claude Code.</strong><br>
+  <strong>Spec-Driven Development for Claude Code and OpenCode.</strong><br>
   From a ticket to a merged PR in explicit steps, with architectural memory that doesn't decay.
 </p>
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
   <img alt="Status: experimental" src="https://img.shields.io/badge/status-experimental-orange.svg">
-  <img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code-purple.svg">
+  <a href="https://www.npmjs.com/package/nova-spec"><img alt="npm" src="https://img.shields.io/npm/v/nova-spec.svg"></a>
+  <img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code%20%7C%20OpenCode-purple.svg">
 </p>
 
 ---
 
 ## What it is
 
-`nova-spec` adds seven `/nova-*` commands to Claude Code that turn a ticket into a traceable change: classify, close requirements, plan, implement task by task, review, and wrap up with commit + PR + memory update. Memory (`context/decisions/`, `context/gotchas/`, `context/services/`) lives in atomic markdown files that humans edit and `grep` finds.
+`nova-spec` adds seven `/nova-*` slash commands to Claude Code (and OpenCode) that turn a ticket into a traceable change: classify, close requirements, plan, implement task by task, review, and wrap up with commit + PR + memory update.
 
-It's not a template or a generator. It's a set of conventions + commands that Claude Code runs as slash commands inside your repo.
+Architectural memory (`context/decisions/`, `context/gotchas/`, `context/services/`) lives in atomic markdown files that humans edit and `grep` finds.
+
+It's not a template or a generator. It's a set of conventions + commands that your AI agent runs as slash commands inside your repo.
 
 ## Who is this for
 
-- Developers using **Claude Code** (or OpenCode) on real projects, not toy demos.
+- Developers using **Claude Code** or **OpenCode** on real projects, not toy demos.
 - Teams that want their AI agent to follow a **disciplined ticket → PR flow** instead of one-shotting code.
 - Anyone tired of **re-explaining the same architectural context** every new chat.
 
 If you only use Claude Code for one-off scripts, this is overkill. If you ship to production with it, read on.
 
-## Why it exists
-
-Without discipline, an agent writes code fast and loses the *why*. The next ticket forces you to re-explain the same context. `nova-spec` enforces human checkpoints, separates spec from executable tasks, and leaves a trail in `context/` so the next ticket starts informed.
-
 ## Quickstart
 
 ```bash
-# 1. Clone nova-spec on your machine (one time only)
-git clone https://github.com/adansuku/nova-spec.git ~/tools/nova-spec
-
-# 2. From the repo where you want to use it
-cd /path/to/your-project
-bash ~/tools/nova-spec/install.sh
-
-# 3. Open Claude Code and launch your first ticket
-claude
-/nova-start PROJ-123
+npx nova-spec init
 ```
 
-Full details in [INSTALL.md](./INSTALL.md).
+That's it. The interactive wizard asks where to install (global or per-project), which runtime (Claude Code, OpenCode, or both), and optionally your Jira connection. It generates a ready-to-use `config.yml` — no manual editing required.
+
+Then open your editor and run your first ticket:
+
+```
+/nova-start PROJ-123
+```
 
 ## A taste of it
 
@@ -72,7 +68,7 @@ Loaded context:
 Next step: /nova-spec
 ```
 
-No code yet. The agent has classified the work, created the branch, and pulled in only the architectural decisions that matter for this ticket. From here you'd move on to `/nova-spec` to close requirements, then `/nova-plan`, then `/nova-build`.
+No code yet. The agent classified the work, created the branch, and pulled in only the architectural decisions that matter for this ticket.
 
 ## Flow
 
@@ -82,7 +78,6 @@ No code yet. The agent has classified the work, created the branch, and pulled i
 
 | Command | What it does |
 |---|---|
-| `/nova-init` | One-off bootstrap: scans the repo and generates draft `context/services/` files with TODOs |
 | `/nova-start <TICKET>` | Pulls the ticket, classifies it (quick-fix / feature / architecture), creates a branch, loads context |
 | `/nova-spec` | Closes open decisions and writes `proposal.md` |
 | `/nova-plan` | Translates the spec into `tasks.md` (plan + tasks) |
@@ -90,8 +85,32 @@ No code yet. The agent has classified the work, created the branch, and pulled i
 | `/nova-review` | Final code review against spec, conventions and decisions |
 | `/nova-wrap` | Updates memory, archives the spec, creates commit and PR |
 | `/nova-status [TICKET]` | Current status of the ticket (read-only) |
+| `/nova-sync` | Updates nova-spec core to the latest version |
+| `/nova-diff <name>` | Shows diff between your custom override and the new core version |
 
-`quick-fix` tickets skip `/nova-spec` and `/nova-plan`. `/nova-init` is optional and runs only once when installing nova-spec into an existing repo.
+`quick-fix` tickets skip `/nova-spec` and `/nova-plan`.
+
+## Customizing skills and commands
+
+Place any file in `novaspec/custom/` to override the core version — same name, your rules:
+
+```
+novaspec/
+├── skills/         ← core (managed by nova-spec)
+└── custom/
+    └── skills/
+        └── nova-wrap/   ← your override, same name wins
+```
+
+Run `/nova-sync` to update the core. Your `custom/` folder is never touched.
+
+## Keeping up to date
+
+```bash
+npx nova-spec sync
+```
+
+Updates the core, preserves your custom overrides and `config.yml`, and tells you if any of your overrides have upstream changes worth reviewing.
 
 ## Principles
 
@@ -102,14 +121,9 @@ No code yet. The agent has classified the work, created the branch, and pulled i
 
 ## Documentation
 
-- Detailed install: [INSTALL.md](./INSTALL.md)
-- Internal architecture: [novaspec/README.arch.md](./novaspec/README.arch.md)
-- Quick reference: [novaspec/README.quickref.md](./novaspec/README.quickref.md)
+- Install options: [INSTALL.md](./INSTALL.md)
+- Design philosophy: [PHILOSOPHY.md](./PHILOSOPHY.md)
 - Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md)
-
-## See also
-
-`nova-spec` was built using itself. The full development history — including specs, decisions, gotchas and dogfooding — is preserved in the lab repo: [adansuku/nova-spec-lab](https://github.com/adansuku/nova-spec-lab).
 
 ## License
 
