@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 #
-# nova-spec installer — Interactive
-# Installs nova-spec into Claude Code or OpenCode.
+# nova-spec installer — legacy bash wrapper
+#
+# The recommended installer is now the npm CLI:
+#   npx nova-spec init
+#
+# This script is kept for environments without Node.js.
+# For the full interactive wizard (Jira setup, branch config, etc.)
+# use the npm CLI instead.
 #
 # Usage: bash install.sh [options]
 #   -t, --target    claude|opencode|both  Target (prompts if not specified)
