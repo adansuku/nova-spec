@@ -204,6 +204,41 @@ as atomic files in `context/decisions/` (filename = concept). When a
 decision becomes obsolete, create a new one with `> Supersedes: <old>.md`
 and `git mv` the old one to `context/decisions/archived/`.
 
+### Plugging in custom skills
+
+`nova-spec` doesn't talk to a specific ticket tracker or VCS directly.
+It delegates to skills you point at via `ticket.skill` and `vcs.skill`
+in `novaspec/config.yml`. Leave them empty to keep the built-in
+defaults (paste-the-ticket flow + GitHub via `gh`).
+
+**Where to put your custom skill**:
+
+| Location | When |
+|---|---|
+| `~/.claude/skills/<name>/SKILL.md` | Personal/company skills you reuse across all your repos. **Recommended** for things like a private Jira integration with company-specific fields. |
+| `<repo>/novaspec/skills/<name>/SKILL.md` | Team-wide skills committed with this specific repo. Travels with the project. |
+| `~/.claude/plugins/<plugin>/skills/<name>/SKILL.md` | Skills distributed via a Claude Code plugin. |
+
+Claude Code resolves skills by **name** across all sources — the `skill:`
+field in `config.yml` is just the name. The first match wins.
+
+**Don't put company-private skills under the `nova-spec` source repo.**
+Those four built-in skills (`close-requirement`, `jira-integration`,
+`update-service-context`, `write-decision`) are the only ones meant to
+ship with the framework.
+
+**What `/nova-wrap` and `/nova-start` expect from a skill**:
+
+- `ticket.skill` — must support:
+  - *fetch* a ticket by ID and return title, description, acceptance criteria, status
+  - *transition* a ticket to "Done" (used by `/nova-wrap` step 7)
+- `vcs.skill` — must support:
+  - *commit* with the project's conventions (used by `/nova-wrap` step 5)
+  - *create a PR/MR* against a base branch with title and body (used by `/nova-wrap` step 6)
+
+The skill itself defines how those operations work (API calls, prompts,
+provider details). nova-spec only declares the interface.
+
 ---
 
 ## What goes to git vs local (recommended)
