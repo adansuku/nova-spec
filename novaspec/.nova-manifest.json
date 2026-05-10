@@ -1,0 +1,30 @@
+{
+  "version": "1.0.1",
+  "generated_at": "2026-05-10T07:46:23.881Z",
+  "hashes": {
+    "commands/nova-build": "5d9c103168f97dd60e4efbe1f9a277a7",
+    "commands/nova-diff": "529389d8d7d187c70de708610101009c",
+    "commands/nova-plan": "44709e96a49e86d808f3cad94c0bdc86",
+    "commands/nova-review": "aa2e4e91fe5e774ae7f374c7f3bf8882",
+    "commands/nova-spec": "726194e235d566dfbb81e785a6437b46",
+    "commands/nova-start": "d031e1958cf769864f566e9d768b1552",
+    "commands/nova-status": "cf0b7db18d4290479c35ed3b87fecc56",
+    "commands/nova-sync": "4364efbb594eeddaff7deba8d7e2a947",
+    "commands/nova-wrap": "846dfee6faaba65d80c082bb90e9b306",
+    "skills/close-requirement": {
+      "SKILL.md": "43d5f32320a635b15601a21ef5a0bf93"
+    },
+    "skills/jira-integration": {
+      "SKILL.md": "513f8b116be4bed955a8e3631bbf250c"
+    },
+    "skills/update-service-context": {
+      "SKILL.md": "b0788661cc61e2c6acb4bead24f48017"
+    },
+    "skills/write-decision": {
+      "SKILL.md": "20ea0ac9f19ec17a72d562f811c4a61e"
+    },
+    "agents/context-loader": "42a4cf797452bd76c720bd8f36e261f4",
+    "agents/nova-review-agent": "5658926243d4ce01cfc3b79ee8e4ad93"
+  },
+  "outdated_customs": []
+}
