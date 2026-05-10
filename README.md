@@ -60,6 +60,8 @@ Affected services: auth-api ✓
 Branch created: feature/PROJ-42-rate-limit-login (from main)
 
 Loaded context:
+  Stack: ✓ loaded
+  Conventions: ✓ loaded
   Services: auth-api ✓
   Decisions read: throttling-strategy.md, redis-usage.md
   Gaps: none
