@@ -42,6 +42,19 @@ context/
 
 Memory model: one fact = one file, filename = index, explicit supersede via `> Supersedes: <old>.md`. Wisdom about memory itself lives in `decisions/`, not in `AGENTS.md`.
 
+## Auto-sync on session start
+
+At the start of every session, check if nova-spec has pending updates by running:
+
+```
+/nova-sync
+```
+
+If `novaspec/.nova-manifest.json` exists and the installed version matches the latest, skip it silently. If there are updates or outdated custom overrides, report them to the user before proceeding.
+
+> **Claude Code** handles this automatically via a `SessionStart` hook in `.claude/settings.json`.
+> **OpenCode** relies on this instruction — always run `/nova-sync` at session start.
+
 ## Symlinks
 
 Claude Code discovers commands via `.claude/` symlinks pointing to `novaspec/`.

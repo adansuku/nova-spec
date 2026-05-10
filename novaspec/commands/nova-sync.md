@@ -12,7 +12,7 @@ which custom overrides may need attention.
 Execute in the terminal:
 
 ```bash
-npx nova-spec sync
+npx nova-spec@latest sync
 ```
 
 Show the output to the user as-is.
@@ -43,4 +43,4 @@ If everything is clean:
 
 - Don't modify any custom files.
 - Don't auto-merge or apply changes.
-- If `npx nova-spec sync` fails, show the error and stop.
+- If `npx nova-spec@latest sync` fails, show the error and stop.
