@@ -52,19 +52,35 @@ Default: don't write. Most tickets don't generate a gotcha.
 Use the structure of `novaspec/templates/commit.md` as a template.
 If there are many changes, propose grouping into logical commits.
 
-### 6. Create PR
+### 6. Create PR / MR
 
 Resolve the base branch the same way `/nova-start` does:
 - Read `branch.base` from `novaspec/config.yml`.
 - If the key is missing, try `develop`; if that doesn't exist either, ask
   the user and recommend setting `branch.base` in `novaspec/config.yml`.
 
-Create the PR with `gh pr create --base <resolved-base> --title "<title>"
---body "<description>"`.
+**Build the create-PR command via the forge abstraction**, never hardcode `gh`:
+
+```bash
+npx nova-spec forge pr-command "<title>" "<body>" "<base>"
+```
+
+The CLI reads `forge.type` and `forge.cli` from `novaspec/config.yml` (or
+auto-detects from `git remote`) and prints the right command for GitHub
+(`gh pr create ...`) or GitLab (`glab mr create ...`). Show the command to
+the user, ask for confirmation, then execute it.
+
+If the forge CLI isn't installed (`gh: command not found` or `glab: command
+not found`), tell the user how to install it and offer to fall back to a
+manual `git push -u origin <branch>` plus a link they can open.
 
 **Title**: `<TICKET-ID>: <title>`
 
 **Description**: use the structure of `novaspec/templates/pr-body.md` as a template.
+
+> Note: GitHub calls it "Pull Request" (PR); GitLab calls it "Merge Request"
+> (MR). Use the right term in user-facing messages — `npx nova-spec forge term`
+> prints `PR` or `MR` based on the configured forge.
 
 ### 7. Close the ticket in Jira
 

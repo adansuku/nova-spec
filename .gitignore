@@ -1,9 +1,9 @@
-context/backlog/*
+context/
 .claude/*
 .opencode/*
 .env
 novaspec/config.yml
-novaspec/custom/
+novaspec/.nova-manifest.json
 notes.md
 .DS_Store
 *.swp
@@ -12,13 +12,3 @@ CLAUDE.md
 _bmad/*
 _bmad-output/*
 node_modules/
-
-# nova-spec (local)
-novaspec/config.yml
-novaspec/custom/
-.env
-notes.md
-.opencode/settings.local.json
-.opencode/node_modules/
-.DS_Store
-# /nova-spec

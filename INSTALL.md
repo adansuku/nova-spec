@@ -26,17 +26,14 @@ It generates a ready-to-use `novaspec/config.yml`. No manual editing required.
 ├── AGENTS.md                    Repo anchor — first thing the agent reads
 ├── notes.md                     Scratch pad
 │
-├── novaspec/                    Framework content (managed by nova-spec)
+├── novaspec/                    Framework content (edit any file directly)
 │   ├── config.yml               Your project config (gitignored)
 │   ├── commands/                /nova-* slash commands
 │   ├── skills/                  Auxiliary skills (Jira, memory, etc.)
 │   ├── agents/                  Subagents (context-loader, review)
-│   ├── guardrails/              Shared preconditions
-│   ├── templates/               Artifact templates
-│   └── custom/                  Your overrides — never touched by sync
-│       ├── commands/
-│       ├── skills/
-│       └── agents/
+│   ├── guardrails/              Shared preconditions (bash scripts)
+│   ├── templates/               Artifact templates (PR body, commit, etc.)
+│   └── .nova-manifest.json      Tracks last-shipped hashes (gitignored)
 │
 ├── .claude/                     Symlinks so Claude Code discovers the commands
 │   ├── commands -> ../novaspec/commands
@@ -82,21 +79,27 @@ Run your first ticket:
 
 ---
 
-## Customizing skills and commands
+## Customizing the framework
 
-Override any core skill or command by copying it to `novaspec/custom/`:
+Edit any file under `novaspec/` directly. There is no separate "custom" folder — your edits live where they're used:
 
 ```bash
-# Example: customize the nova-wrap command
-cp novaspec/commands/nova-wrap.md novaspec/custom/commands/nova-wrap.md
-# Edit novaspec/custom/commands/nova-wrap.md
+# Customize the PR/MR description for your team
+$EDITOR novaspec/templates/pr-body.md
+
+# Add an extra step to /nova-wrap
+$EDITOR novaspec/commands/nova-wrap.md
 ```
 
-The custom version takes priority. `novaspec/custom/` is gitignored by default — if your team needs to share customizations, remove the gitignore entry.
+When `npx nova-spec sync` runs, it hashes every framework file and compares it with what was last shipped. If it matches → safe to overwrite with the new version. If it differs → you've edited it, sync skips it and reports the path so you can `/nova-diff <path>` to see what changed upstream.
+
+Your customizations are part of your repo. Commit them with the team — every developer gets the same flow.
 
 ---
 
 ## Keeping up to date
+
+`npx nova-spec sync` runs automatically every time Claude Code or OpenCode start (via a `SessionStart` hook). You can also run it manually:
 
 ```bash
 npx nova-spec sync
@@ -108,7 +111,7 @@ Or from inside Claude Code / OpenCode:
 /nova-sync
 ```
 
-This updates the core files, preserves your `custom/` folder and `config.yml`, and reports if any of your custom overrides have upstream changes worth reviewing.
+The sync report lists: new files, updated files (untouched locally), skipped files (you edited), and removed files. Your local edits are always preserved.
 
 ---
 

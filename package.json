@@ -12,7 +12,7 @@
     "AGENTS.md"
   ],
   "scripts": {
-    "test": "echo \"No automated tests — use smoke test in CLAUDE.md\""
+    "test": "node test/smoke.test.js"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.0.0"

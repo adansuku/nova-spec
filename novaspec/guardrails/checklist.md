@@ -1,10 +1,17 @@
 # Guardrails — Checklist
 
-**Execution order: 1 → 2 → 3 → 4 → 5 → 6**
+**Execution order: 1 → 2 → 7 → 3 → 4 → 5 → 6**
 
 ## 1. branch-pattern
 Verify the active ticket branch. Extract `<ticket-id>` from the current git branch.
-- Must follow the pattern `(feature|fix|arch)/<TICKET>-<slug>` from `novaspec/config.yml`.
+- Read `branch.types` from `novaspec/config.yml` to know which prefixes are
+  valid for this project. The defaults shipped by the installer are:
+  `feature, fix, arch, bugfix, hotfix, docs, refactor, chore`.
+- The branch must follow `<type>/<TICKET>-<slug>` where `<type>` is any of
+  the configured types (matched against the **values** in `branch.types`,
+  e.g. `documentation: docs` → `docs` is valid).
+- If `ticket_system: none` in config, the `<TICKET>` part can be any
+  identifier the user chose (no enforced format).
 - ⛔ **Stop.** Run `/nova-start <TICKET>` first.
 
 ## 2. proposal-exists
@@ -32,3 +39,9 @@ Verify the review was approved.
 Validate that superseded decisions are archived.
 - Files in `context/decisions/*.md` with `> Supersedes: X.md` imply that `X.md` lives in `context/decisions/archived/`, not at the root.
 - ⛔ **Stop.** Move the file to `archived/` with `git mv` and retry.
+
+## 7. proposal-closed
+Deterministic check: the proposal has no unresolved markers.
+- Run `bash novaspec/guardrails/proposal-closed.sh <ticket-id>`.
+- The script greps for `TBD`, `TODO`, `FIXME`, `???`, `<placeholder>`, `[ ] decision`.
+- ⛔ **Stop.** Re-run `/nova-spec` and close the open requirements before `/nova-plan`.
