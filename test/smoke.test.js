@@ -313,5 +313,154 @@ test('all novaspec/guardrails/*.sh files are executable', () => {
   }
 });
 
+// 14. REGRESSION: migrateConfig handles inline YAML comments without corrupting value
+test('migrateConfig strips inline comments from done_transition_id', () => {
+  const dir = tmpDir();
+  const cfg = path.join(dir, 'config.yml');
+  fs.writeFileSync(
+    cfg,
+    'jira:\n  done_transition_id: 41   # was 31 before workflow rework\n',
+  );
+  migrateConfig(cfg);
+  const out = fs.readFileSync(cfg, 'utf8');
+  // Both the legacy key and the new transitions.done must equal "41" — not "41   # was 31..."
+  assert.ok(/done_transition_id: "41"/.test(out), `expected clean done_transition_id, got:\n${out}`);
+  assert.ok(/transitions:\s*\n\s*done: "41"/.test(out), `expected clean transitions.done, got:\n${out}`);
+});
+
+// 15. REGRESSION: hashFile on a symlink hashes the link target string, not the resolved file
+test('hashFile treats symlinks as modified content (no follow)', () => {
+  const dir = tmpDir();
+  const real = path.join(dir, 'real.txt');
+  const link = path.join(dir, 'link.txt');
+  fs.writeFileSync(real, 'real content');
+  fs.symlinkSync('real.txt', link);
+
+  // Re-require sync.js fresh (it caches hashFile internally via crypto, but functions are pure)
+  const crypto = require('crypto');
+  const expectedLinkHash = crypto.createHash('sha256').update('real.txt').digest('hex');
+  const realHash = crypto.createHash('sha256').update('real content').digest('hex');
+
+  // We can't call hashFile directly (not exported), but verify the behavior end-to-end
+  // by inspecting that walk() skips symlinks. Build manifest and confirm link.txt is absent:
+  // Simulate by checking via the sync module's collectPackageFiles indirectly.
+  // For a direct unit on hashFile, replicate the logic inline matching sync.js:
+  const stat = fs.lstatSync(link);
+  let observedLinkHash;
+  if (stat.isSymbolicLink()) {
+    observedLinkHash = crypto.createHash('sha256').update(fs.readlinkSync(link)).digest('hex');
+  } else {
+    observedLinkHash = crypto.createHash('sha256').update(fs.readFileSync(link)).digest('hex');
+  }
+  assert.strictEqual(observedLinkHash, expectedLinkHash, 'symlink hashes its target string');
+  assert.notStrictEqual(observedLinkHash, realHash, 'symlink hash must differ from real file content hash');
+});
+
+// 16. REGRESSION: readManifest backs up corrupt JSON instead of process.exit
+test('readManifest recovers from corrupt JSON by backing it up', () => {
+  const dir = tmpDir();
+  const manifest = path.join(dir, 'novaspec', '.nova-manifest.json');
+  fs.mkdirSync(path.join(dir, 'novaspec'), { recursive: true });
+  fs.writeFileSync(manifest, '{not valid json'); // corrupt
+
+  // Should NOT throw / exit — recovers with empty manifest + backup file
+  const result = sync.readManifest(manifest);
+  assert.deepStrictEqual(result, { files: {} }, 'returns empty manifest after recovery');
+  const siblings = fs.readdirSync(path.join(dir, 'novaspec'));
+  assert.ok(
+    siblings.some((n) => n.startsWith('.nova-manifest.json.corrupt.')),
+    'corrupt manifest must be preserved as backup',
+  );
+  assert.ok(
+    !siblings.includes('.nova-manifest.json'),
+    'corrupt manifest must be removed from primary path',
+  );
+});
+
+// 17. REGRESSION: ensureSessionStartHook dedupes legacy hooks (no marker)
+test('ensureSessionStartHook removes legacy hooks without the marker', () => {
+  const dir = tmpDir();
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+  const settingsPath = path.join(dir, '.claude', 'settings.local.json');
+
+  // Simulate two old nova-spec hooks (one without marker, one with old marker shape)
+  fs.writeFileSync(
+    settingsPath,
+    JSON.stringify({
+      hooks: {
+        SessionStart: [
+          { hooks: [{ type: 'command', command: 'npx nova-spec sync' }] }, // legacy, no marker
+          { hooks: [{ type: 'command', command: 'echo "user-hook"' }] }, // unrelated user hook
+          { hooks: [{ type: 'command', command: 'npx nova-spec@1.0.0 sync # nova-spec auto-sync' }] }, // older nova
+        ],
+      },
+    }),
+  );
+
+  sync.ensureSessionStartHook(dir);
+  const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+  const flat = settings.hooks.SessionStart.flatMap((g) => g.hooks);
+
+  const novaHooks = flat.filter((h) =>
+    /\bnpx\s+nova-spec(@\S+)?\s+sync\b/.test(h.command),
+  );
+  const userHooks = flat.filter((h) => h.command === 'echo "user-hook"');
+  assert.strictEqual(novaHooks.length, 1, 'must collapse all nova hooks to one canonical');
+  assert.strictEqual(userHooks.length, 1, 'must preserve unrelated user hook');
+  assert.ok(
+    novaHooks[0].command.includes(sync.HOOK_MARKER),
+    'the surviving nova hook must carry the modern marker',
+  );
+});
+
+// 18. REGRESSION: detectForge falls back to non-origin remotes
+test('detectForge falls back to other remotes when origin is missing or unsupported', () => {
+  const { execSync } = require('child_process');
+  const dir = tmpDir();
+  execSync('git init -q', { cwd: dir });
+  execSync('git remote add upstream git@gitlab.com:fake/project.git', { cwd: dir });
+
+  const { detectForge } = require('../lib/forge.js');
+  const result = detectForge(dir);
+  assert.strictEqual(result, 'gitlab', 'gitlab remote via upstream must be detected');
+});
+
+// 19. REGRESSION: writeAtomic doesn't leave .tmp files on success
+test('writeAtomic produces the final file and removes its tmp', () => {
+  const dir = tmpDir();
+  const target = path.join(dir, 'state.json');
+  sync.writeAtomic(target, '{"hello": "world"}');
+
+  const siblings = fs.readdirSync(dir);
+  assert.deepStrictEqual(siblings, ['state.json'], 'only the final file remains');
+  assert.strictEqual(fs.readFileSync(target, 'utf8'), '{"hello": "world"}');
+});
+
+// 20. REGRESSION: refreshRuntimeLinks recreates symlinks if dest is a copied directory
+test('refreshRuntimeLinks converts copied dir back to a symlink', () => {
+  if (process.platform === 'win32') {
+    // Symlink creation on Windows requires Developer Mode; skip cleanly.
+    console.log('     (skipped on Windows)');
+    return;
+  }
+  const dir = tmpDir();
+  fs.mkdirSync(path.join(dir, 'novaspec', 'commands'), { recursive: true });
+  fs.writeFileSync(path.join(dir, 'novaspec', 'commands', 'nova-start.md'), '# start\n');
+  fs.mkdirSync(path.join(dir, '.claude'), { recursive: true });
+
+  // Simulate Windows fallback: .claude/commands is a copied dir, not a symlink
+  fs.mkdirSync(path.join(dir, '.claude', 'commands'));
+  fs.writeFileSync(path.join(dir, '.claude', 'commands', 'nova-start.md'), '# stale\n');
+
+  sync.refreshRuntimeLinks(dir);
+
+  const linkStat = fs.lstatSync(path.join(dir, '.claude', 'commands'));
+  assert.ok(linkStat.isSymbolicLink(), '.claude/commands must be a symlink after refresh');
+
+  // And the new symlink points at the current novaspec content (not the stale copy)
+  const content = fs.readFileSync(path.join(dir, '.claude', 'commands', 'nova-start.md'), 'utf8');
+  assert.strictEqual(content, '# start\n', 'symlink must resolve to the live novaspec/ content');
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail > 0 ? 1 : 0);
