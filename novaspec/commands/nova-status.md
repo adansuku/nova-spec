@@ -12,8 +12,10 @@ If the user passed an argument (`$ARGUMENTS` is non-empty), use it as `<ticket-i
 
 If there's no argument:
 1. Read the current git branch (`git branch --show-current`).
-2. If the branch matches the pattern `(feature|fix|arch)/<TICKET>-<slug>`,
-   extract `<TICKET>` as `<ticket-id>`.
+2. Read `branch.types` from `novaspec/config.yml` to know which branch
+   prefixes are valid (defaults: `feature|fix|arch|bugfix|hotfix|docs|refactor|chore`).
+   If the branch matches `(<types>)/<TICKET>-<slug>`, extract `<TICKET>`
+   as `<ticket-id>`.
 3. If the branch **doesn't** match that pattern:
    - List the directories under `context/changes/active/`.
    - If there are open tickets, show:

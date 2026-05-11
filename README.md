@@ -60,6 +60,8 @@ Affected services: auth-api ✓
 Branch created: feature/PROJ-42-rate-limit-login (from main)
 
 Loaded context:
+  Stack: ✓ loaded
+  Conventions: ✓ loaded
   Services: auth-api ✓
   Decisions read: throttling-strategy.md, redis-usage.md
   Gaps: none
@@ -86,31 +88,44 @@ No code yet. The agent classified the work, created the branch, and pulled in on
 | `/nova-wrap` | Updates memory, archives the spec, creates commit and PR |
 | `/nova-status [TICKET]` | Current status of the ticket (read-only) |
 | `/nova-sync` | Updates nova-spec core to the latest version |
-| `/nova-diff <name>` | Shows diff between your custom override and the new core version |
+| `/nova-diff <path>` | Shows diff between your local edits and the latest package version |
 
 `quick-fix` tickets skip `/nova-spec` and `/nova-plan`.
 
-## Customizing skills and commands
+## Customizing the framework
 
-Place any file in `novaspec/custom/` to override the core version — same name, your rules:
+Edit any file under `novaspec/` directly. **There is no separate "custom" folder** — your edits live where they're used. `npx nova-spec sync` hash-compares every file and never overwrites the ones you've touched.
 
-```
-novaspec/
-├── skills/         ← core (managed by nova-spec)
-└── custom/
-    └── skills/
-        └── nova-wrap/   ← your override, same name wins
-```
+### The 5 things your team will likely want to change
 
-Run `/nova-sync` to update the core. Your `custom/` folder is never touched.
+1. **PR / MR template** → `novaspec/templates/pr-body.md`
+   What `/nova-wrap` puts in the description box. Add your team's QA checklist, ticket-link format, security notes.
+
+2. **Code review checklist** → `novaspec/templates/review.md`
+   The structure `/nova-review` follows. Add your conventions, your blockers, your sections.
+
+3. **Commit message format** → `novaspec/templates/commit.md`
+   Conventional commits, custom prefixes, ticket-in-subject — whatever your team enforces.
+
+4. **Ticket system** → `novaspec/config.yml` → `ticket_system`
+   Set to `jira` for Atlassian Jira, or `none` to paste tickets manually. `none` skips ticket-key validation in `/nova-start`.
+
+5. **Stack & conventions context** → `context/stack.md` and `context/conventions.md`
+   Loaded at the start of every ticket so the agent knows your tech, your patterns, your "we don't do that here". The installer creates both files with comments explaining what to put in them.
+
+Other useful tweaks: forge (`config.yml` → `forge.type`: github/gitlab), branch base (`branch.base`), guardrails (`novaspec/guardrails/*.sh`).
+
+After any edit, commit it with the team — everyone gets the same flow.
 
 ## Keeping up to date
+
+`npx nova-spec sync` runs automatically when Claude Code or OpenCode start (via a `SessionStart` hook). You can also run it manually:
 
 ```bash
 npx nova-spec sync
 ```
 
-Updates the core, preserves your custom overrides and `config.yml`, and tells you if any of your overrides have upstream changes worth reviewing.
+It updates only the files you haven't edited locally and reports the rest.
 
 ## Principles
 

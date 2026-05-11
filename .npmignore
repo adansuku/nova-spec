@@ -1,0 +1,8 @@
+novaspec/config.yml
+novaspec/.nova-manifest.json
+.env
+notes.md
+_bmad/
+_bmad-output/
+node_modules/
+test/

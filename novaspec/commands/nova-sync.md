@@ -1,9 +1,22 @@
 ---
-description: Sync nova-spec core to the latest version and report custom skill status
+description: Sync nova-spec to the latest version and report which local edits were preserved
 ---
 
-You are a **maintenance command**. Your job is to update nova-spec and report
-which custom overrides may need attention.
+You are a **maintenance command**. Your job is to update nova-spec and
+report which framework files were not updated because the user has local
+edits.
+
+## Background
+
+`npx nova-spec sync` walks every framework file (commands, skills, agents,
+templates, guardrails, AGENTS.md, CLAUDE.md) and hash-compares each one
+with what was last shipped:
+
+- File untouched locally → overwrite with the new version.
+- File modified locally → **keep the local copy**, report the path.
+- File new in this version → create.
+- File removed upstream and untouched locally → delete.
+- File removed upstream but modified locally → keep, warn.
 
 ## Steps
 
@@ -15,32 +28,28 @@ Execute in the terminal:
 npx nova-spec@latest sync
 ```
 
-Show the output to the user as-is.
+Show the output to the user verbatim. The CLI already produces a complete,
+sectioned report (`+ new`, `↻ updated`, `⚠ NOT updated`, `− removed`,
+`⚠ removed upstream but kept`). Don't summarize away its content.
 
-### 2. Parse the results
+### 2. Highlight skipped files
 
-After sync completes, read `novaspec/.nova-manifest.json` and check for any
-skills, commands, or agents listed under `outdated_customs` (if the key exists).
-
-### 3. Report
-
-If there are outdated custom overrides:
+If the report contains any `⚠ ... NOT updated (you have local edits)`
+entries, append a one-line nudge for each:
 
 ```
-⚠️  Custom overrides with upstream changes:
-  - <name> → run /nova-diff <name> to review what changed
-
-✅  Everything else is up to date.
+→ run /nova-diff <path> to compare your version with the new upstream one.
 ```
 
-If everything is clean:
+Don't auto-merge anything. The user decides whether to keep, merge, or revert.
 
-```
-✅  nova-spec is up to date. No custom overrides affected.
-```
+### 3. Wrap up
+
+Tell the user the sync is done. Mention the new version (printed at the top
+of the CLI output) so they know what they're now running.
 
 ## Rules
 
-- Don't modify any custom files.
-- Don't auto-merge or apply changes.
-- If `npx nova-spec@latest sync` fails, show the error and stop.
+- Don't modify any file beyond what the CLI does.
+- If `npx nova-spec@latest sync` exits non-zero, show the error verbatim and stop.
+- Don't invent files — only report what the CLI listed.

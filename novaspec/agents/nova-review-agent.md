@@ -16,16 +16,33 @@ the user. Don't make commits. Don't modify code.
   - `context/changes/active/<ticket-id>/proposal.md`
   - `context/changes/active/<ticket-id>/tasks.md`
 - Read live decisions in `context/decisions/` (all relevant ones, **without entering `archived/`**)
-- Get the full diff by combining:
-  - Committed changes on the branch: `git diff <branch.base>...HEAD`
-  - Uncommitted changes (working tree + staged): `git diff HEAD`
-  - Read `novaspec/config.yml → branch.base` to determine the base branch (default: `main`)
-  - If both diffs are empty, warn: "⚠️ Empty diff: no changes on the branch or in the working tree."
+- Read `novaspec/config.yml → branch.base` to determine the base branch (default: `main`)
 
 If any artifact is missing, stop with:
 ```
 ⛔ Review aborted: missing <file>. Run the corresponding step first.
 ```
+
+### 1b. Run deterministic checks (BLOCKING)
+
+Before any LLM-based review, run the deterministic guardrail:
+
+```bash
+bash novaspec/guardrails/review-checks.sh <ticket-id> <base-branch>
+```
+
+This runs (in order): non-empty diff, declared "Files to touch" all present
+in the diff, `npm run lint` if defined, `npm test` if defined. If the script
+exits non-zero, **mark the verdict as `✗ Needs fixes`** and write the
+script's output verbatim into `review.md` under a "Pre-review checks" section.
+Do NOT proceed to the 4-axis LLM review when deterministic checks fail —
+the verdict is already negative.
+
+### 1c. Get the full diff
+
+Combine:
+  - Committed changes: `git diff <branch.base>...HEAD`
+  - Uncommitted (working tree + staged): `git diff HEAD`
 
 ### 2. Review across 4 axes
 
