@@ -1,5 +1,7 @@
 test/
 docs/
+.github/
+.vitepress/
 _bmad/
 _bmad-output/
 node_modules/

@@ -20,7 +20,10 @@
     "PHILOSOPHY.md"
   ],
   "scripts": {
-    "test": "node test/smoke.test.js"
+    "test": "node test/smoke.test.js",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
     "@inquirer/prompts": "^7.0.0"
@@ -40,5 +43,8 @@
     "spec-driven-development",
     "jira",
     "workflow"
-  ]
+  ],
+  "devDependencies": {
+    "vitepress": "^1.6.4"
+  }
 }

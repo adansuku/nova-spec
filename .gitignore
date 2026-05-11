@@ -18,9 +18,13 @@
 # ═══════════════════════════════════════════════════════════════════
 
 
-# ─── 1. Dependencies ───────────────────────────────────────────────
+# ─── 1. Dependencies & build artifacts ─────────────────────────────
 # Installed via `npm install`. Reproducible from package.json.
 node_modules/
+
+# VitePress build output for the docs site (deployed via GitHub Action)
+docs/.vitepress/dist/
+docs/.vitepress/cache/
 
 
 # ─── 2. OS / editor cruft ──────────────────────────────────────────
