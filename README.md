@@ -14,6 +14,10 @@
   <img alt="Built for Claude Code" src="https://img.shields.io/badge/built%20for-Claude%20Code%20%7C%20OpenCode-purple.svg">
 </p>
 
+<p align="center">
+  <a href="https://adansuku.github.io/nova-spec/"><strong>📖 Read the documentation →</strong></a>
+</p>
+
 ---
 
 ## What it is
@@ -136,6 +140,9 @@ It updates only the files you haven't edited locally and reports the rest.
 
 ## Documentation
 
+**Full docs site**: [adansuku.github.io/nova-spec](https://adansuku.github.io/nova-spec/) — getting started, every command, customization, integrations, architecture, troubleshooting, working as a team.
+
+Local references in this repo:
 - Install options: [INSTALL.md](./INSTALL.md)
 - Design philosophy: [PHILOSOPHY.md](./PHILOSOPHY.md)
 - Contributing: [CONTRIBUTING.md](./CONTRIBUTING.md)
