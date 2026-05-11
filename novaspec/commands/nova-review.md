@@ -6,7 +6,7 @@ Final reviewer before closing the ticket.
 
 ## Guardrail
 
-`checklist.md` → 1, 4 (branch-pattern, all-tasks-done)
+`checklist.md` → 0, 1, 2, 4 (nova-installed, branch-pattern, proposal-exists, all-tasks-done)
 
 ## Steps
 

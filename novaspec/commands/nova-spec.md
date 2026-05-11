@@ -6,7 +6,7 @@ You are responsible for generating the technical spec of the current ticket.
 
 ## Guardrail
 
-`checklist.md` → 1 (branch-pattern)
+`checklist.md` → 0, 1 (nova-installed, branch-pattern)
 
 ## Precondition
 

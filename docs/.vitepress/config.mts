@@ -45,6 +45,8 @@ export default defineConfig({
           { text: '/nova-review', link: '/flow/nova-review' },
           { text: '/nova-wrap', link: '/flow/nova-wrap' },
           { text: '/nova-status', link: '/flow/nova-status' },
+          { text: '/nova-sync', link: '/flow/nova-sync' },
+          { text: '/nova-diff', link: '/flow/nova-diff' },
         ],
       },
 

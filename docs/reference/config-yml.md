@@ -46,7 +46,7 @@ Controls how `/nova-start` names the new branch.
 | Key | Default | Effect |
 |---|---|---|
 | `branch.pattern` | `{type}/{ticket}-{slug}` | Branch-name template. Tokens: `{type}`, `{ticket}`, `{slug}`. |
-| `branch.types` | (8 entries) | Map of classification → branch prefix. The **values** are the actual prefixes used; keys are display names. |
+| `branch.types` | (7 entries: `bugfix`, `hotfix`, `feature`, `documentation` → `docs`, `refactor`, `chore`, `architecture` → `arch`) | Map of classification → branch prefix. The **values** are the actual prefixes used; keys are display names. |
 | `branch.ticket_case` | `upper` | `upper` (`PROJ-42`) or `lower` (`proj-42`) for the `{ticket}` token. |
 | `branch.base` | `main` | Branch new ticket branches are cut from. |
 

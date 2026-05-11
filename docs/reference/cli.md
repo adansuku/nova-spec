@@ -130,15 +130,24 @@ npx nova-spec source novaspec/templates/pr-body.md
 
 Used by `/nova-diff` to locate the package version of a file the user has edited locally.
 
-Exits 1 if the path isn't part of the package.
+The subcommand **sandboxes the path inside the installed package**: any
+input that resolves outside (e.g. `../../etc/passwd`) is rejected with
+exit 1 and `✗ Path escapes the nova-spec package`.
+
+| Exit | Meaning |
+|---|---|
+| 0 | Path resolved and printed |
+| 1 | Path escapes the package OR file does not exist inside the package |
+| 2 | Usage error (no `<path>` argument given) |
 
 ## Exit code summary
 
 | Code | Where | Meaning |
 |---|---|---|
 | 0 | Any | Success |
-| 1 | Generic | Operation failed |
+| 1 | Generic | Operation failed (file missing, path escapes, network error, etc.) |
 | 2 | Any | Usage error (bad args, missing config) |
+| 127 | `forge pr-command` | Configured forge CLI (`gh` / `glab`) is not installed |
 | 401 | `jira` | Invalid Jira credentials |
 | 404 | `jira` | Ticket not found |
 
