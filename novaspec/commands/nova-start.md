@@ -1,5 +1,5 @@
 ---
-description: Start the nova-spec flow from a Jira ticket
+description: Start the nova-spec flow from a ticket
 argument-hint: <TICKET-ID>
 ---
 
@@ -10,17 +10,45 @@ The user has passed the ticket: **$ARGUMENTS**
 Your job is to set the stage before any spec or code is written.
 Don't implement anything. Don't propose a spec. Just orchestrate.
 
+## Guardrail
+
+`checklist.md` → 0 (nova-installed)
+
 ## Steps
 
 ### 1. Get the ticket
 
-Read `novaspec/config.yml` → `jira.skill`.
-- If it has a value, invoke that skill to fetch the ticket.
-- If it's empty or missing, ask the user to paste:
-  - title
-  - description
-  - acceptance criteria
-  - relevant comments
+Read `novaspec/config.yml` → `ticket_system`. It's one of:
+- `jira` — fetch the ticket from Jira via the `jira-integration` skill
+- `none` (or missing key) — no tracker; user pastes content
+
+#### If `ticket_system: jira`
+
+Validate `$ARGUMENTS` matches `[A-Z][A-Z0-9]+-[0-9]+` (e.g. `PROJ-123`).
+If not, refuse and ask for a properly-formatted ticket key.
+
+Invoke the `jira-integration` skill, which runs `npx nova-spec jira get <TICKET>`. Error handling by exit code:
+
+- **Exit 401** — invalid credentials. Tell the user:
+  > "Jira returned 401 Unauthorized. Regenerate your API token at https://id.atlassian.com/manage-profile/security/api-tokens and update `JIRA_API_TOKEN`."
+  Do NOT retry. Stop.
+- **Exit 404** — ticket not found:
+  > "Jira returned 404 for `<TICKET>`. Check the key and `jira.project` in `novaspec/config.yml`."
+  Stop.
+- **Network / timeout / other** — fall back to manual paste:
+  > "Couldn't reach Jira. Paste the ticket title, description, AC, and relevant comments and I'll continue."
+
+#### If `ticket_system: none` (or missing)
+
+Skip the ticket-key format check — `$ARGUMENTS` is a free-form identifier.
+
+Ask the user to paste:
+- title
+- description
+- acceptance criteria
+- relevant comments
+
+Don't make up ticket content.
 
 ### 2. Classify the ticket
 

@@ -17,6 +17,11 @@ permissions:
   pages: write
   id-token: write
 
+# Force every JavaScript-action runtime to Node 24 ahead of GitHub's June 2026
+# default switch. Removes the deprecation warnings from `actions/*` v4/v5.
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
 # Allow only one concurrent deployment, but don't cancel in-progress runs
 concurrency:
   group: pages
@@ -34,7 +39,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 24
           cache: npm
 
       - name: Install dependencies
@@ -45,6 +50,8 @@ jobs:
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
+        with:
+          enablement: true   # auto-enable Pages if not already on
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

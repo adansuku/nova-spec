@@ -1,6 +1,6 @@
 {
   "name": "nova-spec",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "Spec-Driven Development framework for Claude Code and OpenCode",
   "bin": {
     "nova-spec": "bin/nova-spec.js"
@@ -26,7 +26,8 @@
     "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
-    "@inquirer/prompts": "^7.0.0"
+    "@inquirer/prompts": "^7.0.0",
+    "js-yaml": "^4.1.1"
   },
   "engines": {
     "node": ">=18"

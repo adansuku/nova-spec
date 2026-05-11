@@ -7,7 +7,7 @@ This is the step that feeds architectural memory.
 
 ## Guardrail
 
-`checklist.md` → 1, 5, 6 (branch-pattern, review-approved, old-decision-archived)
+`checklist.md` → 0, 1, 5, 6 (nova-installed, branch-pattern, review-approved, old-decision-archived)
 
 ## Precondition
 
@@ -52,15 +52,28 @@ Default: don't write. Most tickets don't generate a gotcha.
 Use the structure of `novaspec/templates/commit.md` as a template.
 If there are many changes, propose grouping into logical commits.
 
-### 6. Create PR
+### 6. Create PR / MR (forge-agnostic)
 
 Resolve the base branch the same way `/nova-start` does:
 - Read `branch.base` from `novaspec/config.yml`.
 - If the key is missing, try `develop`; if that doesn't exist either, ask
   the user and recommend setting `branch.base` in `novaspec/config.yml`.
 
-Create the PR with `gh pr create --base <resolved-base> --title "<title>"
---body "<description>"`.
+**Do NOT hardcode `gh`.** Ask the CLI to build the right command for the
+forge (`gh pr create ...` for GitHub, `glab mr create ...` for GitLab):
+
+```bash
+npx nova-spec forge pr-command "<TICKET-ID>: <title>" "<description>" "<base>"
+```
+
+The CLI also verifies the forge binary is installed; if it isn't, it exits
+with code 127 and a clear error. Show the user the command, get confirmation,
+then execute it.
+
+For user-facing messages use the right vocabulary (PR vs MR):
+```bash
+TERM=$(npx nova-spec forge term)
+```
 
 **Title**: `<TICKET-ID>: <title>`
 
@@ -68,7 +81,9 @@ Create the PR with `gh pr create --base <resolved-base> --title "<title>"
 
 ### 7. Close the ticket in Jira
 
-If `novaspec/config.yml` has `jira.skill` set, invoke the `jira-integration` skill to transition the ticket to "Done".
+If `novaspec/config.yml` has `jira.skill` set (and `ticket_system: jira`), invoke the `jira-integration` skill to transition the ticket to "Done".
+
+The transition ID to use is `jira.transitions.done` from `novaspec/config.yml`. If that key is missing, fall back to the legacy `jira.done_transition_id`. The skill (or `npx nova-spec jira transition <TICKET> <id>` directly) handles the API call.
 
 Confirm to the user: "Ticket <TICKET-ID> marked as Done in Jira ✓"
 
