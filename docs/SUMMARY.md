@@ -44,3 +44,7 @@
 ## Help
 
 * [Troubleshooting](troubleshooting.md)
+
+## Team
+
+* [Working as a team](teamwork.md)
