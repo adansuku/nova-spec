@@ -39,7 +39,7 @@ Side effects:
 * Generates initial `.nova-manifest.json`
 * Adds entries to `.gitignore`
 
-`init` is **idempotent** for the safe parts: re-running it preserves your `config.yml`, your `CLAUDE.md`, your stack/conventions files, and any framework files you've edited (via the same hash-compare logic as sync).
+`init` is safe to re-run if you need to repair a broken install. It preserves `novaspec/config.yml` and does not overwrite an existing `CLAUDE.md`, but it will re-copy stock framework files under `novaspec/`. For updates that must not clobber local edits, use `npx nova-spec sync`.
 
 `update` scope is a shortcut for `npx nova-spec sync`.
 
@@ -108,7 +108,7 @@ npx nova-spec forge detect
 npx nova-spec forge pr-command "Title" "Body" "main"
 # → gh pr create --base 'main' --title 'Title' --body 'Body'
 # or
-# → glab mr create --target-branch 'main' --title 'Title' --description 'Body' --fill
+# → glab mr create --target-branch 'main' --title 'Title' --description 'Body' --yes
 
 # What's the right vocabulary for user-facing messages?
 npx nova-spec forge term

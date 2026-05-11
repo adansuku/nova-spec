@@ -27,7 +27,7 @@ If `context/` doesn't exist, return:
 ## Loaded context
 **Services**: not documented (context/ missing)
 **Decisions**: none
-**Gaps**: context/ structure not initialized — run `npx nova-spec init`
+**Gaps**: context/ structure not initialized — run npx nova-spec init
 **Questions**: none
 ```
 And stop.

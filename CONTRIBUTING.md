@@ -44,7 +44,7 @@ Base branch: `main`.
 
 ## Tests
 
-No automated suite. Verification is the manual smoke test documented in each `proposal.md` plus human review.
+Run the smoke tests with `npm test` (executes `node test/smoke.test.js`). This is not a full CI suite; still follow the manual smoke test in the ticket/spec and do human review.
 
 ## Questions
 

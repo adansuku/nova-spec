@@ -15,6 +15,7 @@
     "novaspec/templates/",
     "novaspec/config.example.yml",
     "AGENTS.md",
+    "CLAUDE.md",
     "INSTALL.md",
     "PHILOSOPHY.md"
   ],
