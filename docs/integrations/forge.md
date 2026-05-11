@@ -63,9 +63,9 @@ npx nova-spec forge term     # → "PR" or "MR"
 | Forge | Command |
 |---|---|
 | `github` | `gh pr create --base <base> --title <title> --body <body>` |
-| `gitlab` | `glab mr create --target-branch <base> --title <title> --description <body> --fill` |
+| `gitlab` | `glab mr create --target-branch <base> --title <title> --description <body> --yes` |
 
-The `--fill` on `glab` lets the CLI auto-populate from the last commit if any field is empty (defensive default; the agent always passes title and body explicitly).
+nova-spec always passes title/body explicitly and uses `--yes` for a non-interactive MR create. It intentionally avoids auto-populate or implicit push behavior — you review and run the printed command.
 
 ## Installing the CLIs
 

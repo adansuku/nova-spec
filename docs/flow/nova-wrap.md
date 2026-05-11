@@ -40,7 +40,7 @@ The step that makes nova-spec **learn**. Without it, the system has no memory an
 | Forge | Command emitted |
 |---|---|
 | `github` | `gh pr create --base <base> --title <t> --body <b>` |
-| `gitlab` | `glab mr create --target-branch <base> --title <t> --description <b> --fill` |
+| `gitlab` | `glab mr create --target-branch <base> --title <t> --description <b> --yes` |
 
 If the CLI is missing (`gh: command not found`), the command tells you how to install it and offers a manual `git push` + URL fallback.
 

@@ -1,6 +1,6 @@
 {
   "name": "nova-spec",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "description": "Spec-Driven Development framework for Claude Code and OpenCode",
   "bin": {
     "nova-spec": "bin/nova-spec.js"
@@ -8,8 +8,16 @@
   "files": [
     "bin/",
     "lib/",
-    "novaspec/",
-    "AGENTS.md"
+    "novaspec/agents/",
+    "novaspec/commands/",
+    "novaspec/guardrails/",
+    "novaspec/skills/",
+    "novaspec/templates/",
+    "novaspec/config.example.yml",
+    "AGENTS.md",
+    "CLAUDE.md",
+    "INSTALL.md",
+    "PHILOSOPHY.md"
   ],
   "scripts": {
     "test": "node test/smoke.test.js"

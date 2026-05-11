@@ -94,14 +94,14 @@ We accept living without features. We do not accept living with bloat. The cost 
 
 ## Forking and customization
 
-**Today (known limitation).** The installer does `rm -rf novaspec/` and re-copies from source. Local edits to `novaspec/commands/`, `skills/`, `templates/`, or `agents/` are **lost on re-run**. The installer only preserves `novaspec/config.yml` (via backup) and the consumer's `context/`.
+**Today.** Updates are applied with `npx nova-spec sync`, which is idempotent and will not overwrite local edits to stock framework files. Sync records the last-shipped hashes in `novaspec/.nova-manifest.json` and:
 
-This contradicts principle 5. We acknowledge the gap. Two practical paths today:
+- Updates files that are still untouched locally
+- Skips files you edited and reports them so you can merge intentionally
 
-- **Team fork**: clone the nova-spec repo into your team's space, customize, install from your fork. Your fork is your `SCRIPT_DIR`.
-- **Manual updates**: don't re-run the installer; pull updates by hand and merge edits.
+This keeps the framework from being the reason you can't ship: your local edits remain yours.
 
-**Planned (not built).** A `team-overrides/` directory that survives re-installs. Until shipped, the fork is the answer. Do not pretend otherwise to consumers.
+If you need deeper customization, commit it in your repo (or fork nova-spec). When upstream changes touch files you customized, sync will intentionally refuse to overwrite them — you choose how to merge.
 
 ---
 

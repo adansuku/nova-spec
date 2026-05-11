@@ -1,79 +1,64 @@
 ---
-description: Show what changed in core for a file you've edited locally
-argument-hint: <relative-path-from-repo-root>
+description: Show differences between your custom override and the current core version
+argument-hint: <skill|command|agent name>
 ---
 
-You are a **read-only** command. Show the diff between the user's local
-version of a framework file and the latest version from the npm package,
-so they can decide whether to merge upstream changes.
-
-## How nova-spec stays out of your way
-
-When you edit a file under `novaspec/` (or `AGENTS.md`), `npx nova-spec sync`
-detects the local edit by hash-compare and **does not overwrite it**. Those
-files are listed in the sync report under "NOT updated (you have local edits)"
-with a hint to run `/nova-diff <path>`.
+You are a **read-only** command. Show what changed between the user's custom
+override and the upstream core version for `$ARGUMENTS`.
 
 ## Steps
 
-### 1. Resolve the path
+### 1. Resolve paths
 
-`$ARGUMENTS` is the file path the user wants to diff, relative to the repo
-root. Examples:
-  - `novaspec/templates/pr-body.md`
-  - `novaspec/commands/nova-wrap.md`
-  - `AGENTS.md`
+- Custom path: `novaspec/custom/<type>/$ARGUMENTS/` (check `skills/`, `commands/`, `agents/` in order)
+- Core path: `novaspec/<type>/$ARGUMENTS/`
 
-If the path doesn't exist locally:
+If the custom path doesn't exist:
 ```
-No local file at "<path>".
+No custom override found for "$ARGUMENTS".
+Nothing to diff.
 ```
-Stop.
+Stop here.
 
-### 2. Find the npm version
+### 2. Check manifest
 
-The shipped version of the file lives inside the installed `nova-spec`
-package. Run:
+Read `novaspec/.nova-manifest.json`. Look for `$ARGUMENTS` in `outdated_customs`.
 
+If not in `outdated_customs`:
+```
+Your custom "$ARGUMENTS" matches the current core version.
+No upstream changes since your override was created.
+```
+Stop here.
+
+### 3. Show diff
+
+Run:
 ```bash
-npx nova-spec source "$ARGUMENTS"
+diff -u novaspec/<type>/$ARGUMENTS/SKILL.md novaspec/custom/<type>/$ARGUMENTS/SKILL.md
 ```
 
-(This subcommand prints the absolute path to the file inside the installed
-nova-spec package, e.g. `~/.npm/_npx/<hash>/node_modules/nova-spec/<path>`.)
-
-If the file isn't part of the package, say so and stop.
-
-### 3. Show the diff
-
-```bash
-diff -u "<package-source>" "<local-path>"
-```
-
-Present it clearly:
-- Lines added/removed in YOUR copy (your edits) → keep these unless you want
-  to revert.
-- Lines added/removed in CORE → consider whether to merge.
+Present the diff clearly, highlighting:
+- Lines added in your custom version (your changes)
+- Lines changed in the new core version that your custom doesn't have
 
 ### 4. Decision prompt
 
 ```
 Options:
-  [K] Keep your version — ignore upstream changes (no-op)
-  [M] Merge manually — I'll show both file paths so you can edit
-  [R] Replace with the package version — discard your edits
+  [K] Keep your version — ignore upstream changes
+  [M] Merge manually — I'll open both files for you to edit
+  [R] Replace with core — discard your custom, use new core version
 ```
 
-Wait for explicit user selection.
+Wait for user selection.
 
-- **[K]**: do nothing.
-- **[M]**: print both paths and remind that the next `/nova-sync` will skip
-  this file again unless its hash matches the package version.
-- **[R]**: copy the package version on top of the local file. Confirm before
-  doing it.
+- **[K]**: Update manifest to mark as reviewed. No file changes.
+- **[M]**: Show both file paths and remind user to run `/nova-sync` after merging.
+- **[R]**: Delete `novaspec/custom/<type>/$ARGUMENTS/` and confirm.
 
 ## Rules
 
 - Never auto-apply changes.
 - Always wait for explicit user decision.
-- For [R], ask for confirmation before overwriting.
+- For [R], ask for confirmation before deleting.
