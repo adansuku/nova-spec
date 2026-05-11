@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 240" role="img" aria-label="novaspec">
+  <title>novaspec</title>
+  <desc>Spec-driven development framework logo</desc>
+  <style>
+    .flow-line { stroke: #534AB7; stroke-width: 2; }
+    .flow-dot-small { fill: #AFA9EC; }
+    .flow-dot-big { fill: #534AB7; }
+    .flow-nova { fill: none; stroke: #7F77DD; stroke-width: 2; }
+    .logo-text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 500; font-size: 48px; fill: #26215C; }
+    .logo-sub { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-weight: 400; font-size: 14px; fill: #534AB7; letter-spacing: 2px; }
+    @media (prefers-color-scheme: dark) {
+      .flow-line { stroke: #CECBF6; }
+      .flow-dot-small { fill: #AFA9EC; }
+      .flow-dot-big { fill: #CECBF6; }
+      .flow-nova { stroke: #AFA9EC; }
+      .logo-text { fill: #EEEDFE; }
+      .logo-sub { fill: #CECBF6; }
+    }
+  </style>
+
+  <g transform="translate(140, 120)">
+    <line class="flow-line" x1="-90" y1="0" x2="90" y2="0"/>
+    <circle class="flow-dot-small" cx="-90" cy="0" r="5"/>
+    <circle class="flow-dot-small" cx="-54" cy="0" r="5"/>
+    <circle class="flow-dot-small" cx="-18" cy="0" r="5"/>
+    <circle class="flow-dot-small" cx="18" cy="0" r="5"/>
+    <circle class="flow-dot-small" cx="54" cy="0" r="5"/>
+    <circle class="flow-nova" cx="90" cy="0" r="18"/>
+    <circle class="flow-nova" cx="90" cy="0" r="10" opacity="0.5"/>
+    <circle class="flow-dot-big" cx="90" cy="0" r="5"/>
+  </g>
+
+  <text class="logo-text" x="280" y="120">novaspec</text>
+  <text class="logo-sub" x="282" y="150">SPEC-DRIVEN DEVELOPMENT</text>
+</svg>
