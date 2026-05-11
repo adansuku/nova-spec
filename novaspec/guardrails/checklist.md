@@ -1,6 +1,12 @@
 # Guardrails — Checklist
 
-**Execution order: 1 → 2 → 7 → 3 → 4 → 5 → 6**
+**Execution order: 0 → 1 → 2 → 7 → 3 → 4 → 5 → 6**
+
+## 0. nova-installed
+Verify nova-spec is properly installed in this project.
+- Run `bash novaspec/guardrails/nova-installed.sh`.
+- Checks that `novaspec/config.yml` and `context/` exist.
+- ⛔ **Stop.** Run `npx nova-spec init` first.
 
 ## 1. branch-pattern
 Verify the active ticket branch. Extract `<ticket-id>` from the current git branch.
