@@ -50,7 +50,7 @@ At the start of every session, check if nova-spec has pending updates by running
 /nova-sync
 ```
 
-If `novaspec/.nova-manifest.json` exists and the installed version matches the latest, skip it silently. If there are updates, report them to the user before proceeding. Files the user has edited locally are preserved automatically — sync detects local edits via hash-compare and skips them.
+If `novaspec/.nova-manifest.json` exists and the installed version matches the latest, skip it silently. If there are updates or outdated custom overrides, report them to the user before proceeding.
 
 > **Claude Code** handles this automatically via a `SessionStart` hook in `.claude/settings.json`.
 > **OpenCode** relies on this instruction — always run `/nova-sync` at session start.

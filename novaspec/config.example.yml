@@ -15,18 +15,10 @@ branch:
   ticket_case: upper    # upper | lower
   base: main            # base branch of the flow
 
-forge:
-  type: auto            # auto | github | gitlab | none
-  cli: auto             # auto | gh | glab
-
-ticket_system: jira     # jira | none
-
 jira:
-  skill: jira-integration            # set to "" to disable Jira
+  skill: ""                        # set to "jira-integration" to enable Jira
   url: https://your-workspace.atlassian.net
   project: PROJ
   email: you@example.com
-  token: ${JIRA_API_TOKEN}            # create at id.atlassian.com/manage-profile/security/api-tokens
-  done_transition_id: "41"            # find via GET /rest/api/3/issue/<TICKET>/transitions
-  transitions:
-    done: "41"                        # structured form, used by /nova-wrap
+  token: ${JIRA_API_TOKEN}         # create at id.atlassian.com/manage-profile/security/api-tokens
+  done_transition_id: "41"         # find via GET /rest/api/3/issue/<TICKET>/transitions

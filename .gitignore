@@ -12,3 +12,14 @@ CLAUDE.md
 _bmad/*
 _bmad-output/*
 node_modules/
+
+# nova-spec (local)
+novaspec/config.yml
+novaspec/.nova-manifest.json
+.env
+notes.md
+.claude/settings.local.json
+.opencode/settings.local.json
+.opencode/node_modules/
+.DS_Store
+# /nova-spec

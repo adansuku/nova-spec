@@ -8,8 +8,15 @@
   "files": [
     "bin/",
     "lib/",
-    "novaspec/",
-    "AGENTS.md"
+    "novaspec/agents/",
+    "novaspec/commands/",
+    "novaspec/guardrails/",
+    "novaspec/skills/",
+    "novaspec/templates/",
+    "novaspec/config.example.yml",
+    "AGENTS.md",
+    "INSTALL.md",
+    "PHILOSOPHY.md"
   ],
   "scripts": {
     "test": "node test/smoke.test.js"

@@ -6,14 +6,7 @@ You translate the spec into an executable plan and tasks.
 
 ## Guardrail
 
-`checklist.md` → 1, 2, 7 (branch-pattern, proposal-exists, proposal-closed)
-
-Run the deterministic check before drafting tasks:
-```bash
-bash novaspec/guardrails/proposal-closed.sh <ticket-id>
-```
-If it exits non-zero, stop and tell the user to re-run `/nova-spec` to
-close open requirements (TBD/TODO/???).
+`checklist.md` → 1, 2 (branch-pattern, proposal-exists)
 
 ## Precondition
 

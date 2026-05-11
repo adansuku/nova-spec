@@ -32,36 +32,26 @@ If `context/` doesn't exist, return:
 ```
 And stop.
 
-### 2. Read stack and conventions
-
-Always read these two files if they exist:
-- `context/stack.md` — tech stack and key dependencies
-- `context/conventions.md` — coding conventions and patterns
-
-If either is missing, note it as a gap but continue.
-
-### 3. Read each service
+### 2. Read each service
 
 For each service in `$ARGUMENTS`:
 - Read `context/services/<service>.md` if it exists.
 - If it doesn't exist, note it as a gap.
 
-### 4. Pick relevant decisions and gotchas
+### 3. Pick relevant decisions and gotchas
 
 - `ls context/decisions/` (no `-R`, doesn't enter `archived/`).
 - `ls context/gotchas/`.
 - Pick 3-5 files from each whose name is relevant to the ticket's scope or affected services. Don't force connections.
 - Read the chosen ones.
 
-### 5. Return summary
+### 4. Return summary
 
 Return exactly this structure, without extra text:
 
 ```
 ## Loaded context
 
-**Stack**: <✓ loaded | ✗ missing — add context/stack.md>
-**Conventions**: <✓ loaded | ✗ missing — add context/conventions.md>
 **Services**: <list with ✓ if services/<svc>.md exists, ✗ otherwise>
 **Decisions read**: <list of files or "none">
 **Gotchas read**: <list of files or "none">
