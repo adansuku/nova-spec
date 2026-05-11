@@ -199,5 +199,119 @@ test('sync preserves user edits and updates untouched files', async () => {
   );
 });
 
+// 9. REGRESSION: js-yaml parses config.yml correctly (replaces broken extractYamlScalar)
+test('config.yml parses with all keys reachable (regression: \\Z + \\s* bugs)', () => {
+  // Build a config that mimics what the installer writes — jira: is the last block
+  const dir = tmpDir();
+  const novaspec = path.join(dir, 'novaspec');
+  fs.mkdirSync(novaspec, { recursive: true });
+
+  const configText = [
+    'branch:',
+    '  base: "main"',
+    '',
+    'forge:',
+    '  type: "github"',
+    '  cli: "auto"',
+    '',
+    'ticket_system: "jira"',
+    '',
+    'jira:',
+    '  skill: "jira-integration"',
+    '  url: "https://example.atlassian.net"',
+    '  project: "PROJ"',
+    '  email: "me@example.com"',
+    '  token: "${JIRA_API_TOKEN}"',
+    '  done_transition_id: "41"',
+    '  transitions:',
+    '    done: "41"',
+    '',
+  ].join('\n');
+  fs.writeFileSync(path.join(novaspec, 'config.yml'), configText);
+
+  const cwd = process.cwd();
+  process.chdir(dir);
+  try {
+    const { loadConfig, readForgeConfig } = require('../lib/cli.js');
+    const cfg = loadConfig();
+    assert.strictEqual(cfg.jira.url, 'https://example.atlassian.net', 'last block (jira) must parse');
+    assert.strictEqual(cfg.jira.email, 'me@example.com', 'email must not be confused with next line');
+    assert.strictEqual(cfg.jira.transitions.done, '41', 'nested transitions.done must parse');
+    assert.strictEqual(cfg.forge.type, 'github', 'forge.type must parse');
+
+    const forge = readForgeConfig();
+    assert.strictEqual(forge.type, 'github', 'readForgeConfig: explicit forge.type respected');
+  } finally {
+    process.chdir(cwd);
+  }
+});
+
+// 10. REGRESSION: runSource rejects path traversal
+test('runSource rejects ../ traversal outside PACKAGE_ROOT', () => {
+  const { execFileSync } = require('child_process');
+  const bin = path.join(__dirname, '..', 'bin', 'nova-spec.js');
+
+  // Valid path inside the package should succeed
+  let okOut = execFileSync('node', [bin, 'source', 'novaspec/templates/pr-body.md'], { encoding: 'utf8' }).trim();
+  assert.ok(okOut.endsWith('novaspec/templates/pr-body.md'), 'valid path resolves');
+
+  // Traversal must exit non-zero with clear error
+  let exitCode = 0;
+  let stderr = '';
+  try {
+    execFileSync('node', [bin, 'source', '../../../../etc/passwd'], { stdio: 'pipe' });
+  } catch (err) {
+    exitCode = err.status;
+    stderr = err.stderr ? err.stderr.toString() : '';
+  }
+  assert.strictEqual(exitCode, 1, 'must exit 1 for traversal');
+  assert.ok(/escapes the nova-spec package/i.test(stderr), 'must mention the package boundary');
+});
+
+// 11. REGRESSION: sync without manifest preserves disk content (no clobber)
+test('sync without manifest preserves user edits (conservative mode)', async () => {
+  const dir = tmpDir();
+  const PACKAGE_ROOT = path.join(__dirname, '..');
+
+  // Simulate a corrupted install: package copied but manifest deleted/missing
+  copyTree(path.join(PACKAGE_ROOT, 'novaspec'), path.join(dir, 'novaspec'));
+  fs.copyFileSync(path.join(PACKAGE_ROOT, 'AGENTS.md'), path.join(dir, 'AGENTS.md'));
+
+  // User has previously customized a file
+  const editedPath = path.join(dir, 'novaspec', 'templates', 'pr-body.md');
+  fs.writeFileSync(editedPath, '# CUSTOM CONTENT — should survive sync without manifest\n');
+
+  // No manifest exists
+  const manifestPath = path.join(dir, 'novaspec', '.nova-manifest.json');
+  assert.ok(!fs.existsSync(manifestPath), 'precondition: no manifest');
+
+  await sync.sync(dir);
+
+  assert.strictEqual(
+    fs.readFileSync(editedPath, 'utf8'),
+    '# CUSTOM CONTENT — should survive sync without manifest\n',
+    'sync without manifest must NOT overwrite user edits',
+  );
+});
+
+// 12. REGRESSION: buildHookCommand uses $HOME (shell-resolved, not baked in)
+test('buildHookCommand uses literal $HOME, not installer homedir', () => {
+  const cmd = sync.buildHookCommand();
+  assert.ok(cmd.includes('"$HOME/.nova-spec.log"'), 'log path must be a quoted $HOME expansion');
+  assert.ok(!cmd.includes(require('os').homedir()), 'must NOT contain the installer\'s resolved home');
+});
+
+// 13. REGRESSION: every shipped .sh guardrail has the executable bit
+test('all novaspec/guardrails/*.sh files are executable', () => {
+  const guardrailsDir = path.join(__dirname, '..', 'novaspec', 'guardrails');
+  const scripts = fs.readdirSync(guardrailsDir).filter((n) => n.endsWith('.sh'));
+  assert.ok(scripts.length > 0, 'expected at least one .sh guardrail');
+  for (const name of scripts) {
+    const mode = fs.statSync(path.join(guardrailsDir, name)).mode;
+    const isExecutable = (mode & 0o111) !== 0;
+    assert.ok(isExecutable, `${name} must be executable (got mode ${(mode & 0o777).toString(8)})`);
+  }
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail > 0 ? 1 : 0);

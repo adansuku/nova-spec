@@ -26,7 +26,8 @@
     "docs:preview": "vitepress preview docs"
   },
   "dependencies": {
-    "@inquirer/prompts": "^7.0.0"
+    "@inquirer/prompts": "^7.0.0",
+    "js-yaml": "^4.1.1"
   },
   "engines": {
     "node": ">=18"

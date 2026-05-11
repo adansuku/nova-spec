@@ -1,96 +1,81 @@
 ---
 name: jira-integration
-description: Read and create tasks in Jira via the REST API. Uses the project's config.yml (`jira` section).
+description: Read and transition Jira tickets via the deterministic `npx nova-spec jira` CLI. The CLI handles auth so tokens never appear in shell commands.
 ---
 
 # Jira Integration
 
-Read and create issues in Jira using Atlassian's REST API v3.
+This skill is a thin wrapper around the `npx nova-spec jira` subcommand,
+which is a small Node-based HTTP client. **Never build `curl` calls by hand**
+— the CLI keeps the `JIRA_API_TOKEN` inside the Node process and never
+inlines it on a command line.
 
-## Required config in config.yml
+## Required config in `novaspec/config.yml`
 
 ```yaml
+ticket_system: jira
+
 jira:
   skill: jira-integration
-  url: https://your-org.atlassian.net   # no trailing slash
-  project: PROJ                          # default project key
-  email: you@email.com
-  token: ${JIRA_API_TOKEN}               # reference to env variable
-  done_transition_id: "41"               # find it via GET /rest/api/3/issue/<TICKET>/transitions
+  url: https://your-workspace.atlassian.net   # no trailing slash
+  project: PROJ                                # default project key
+  email: you@example.com                       # tied to the token
+  token: ${JIRA_API_TOKEN}                     # env-var reference
+  done_transition_id: "41"                     # legacy, kept for fallback
+  transitions:
+    done: "41"                                 # preferred form, used by /nova-wrap
 ```
 
 Get the token at: https://id.atlassian.com/manage-profile/security/api-tokens
-
-## How to use this skill
-
-When the user asks to read or create Jira tasks:
-
-1. **Read the config**: read the project's `config.yml` and extract the `jira` section.
-2. **Resolve the token**: if the value starts with `${`, read the corresponding env variable (e.g. `$JIRA_API_TOKEN`).
-3. **Build Basic Auth credentials**: `base64(email:token)`.
-4. **Call the API** with `curl` for the requested operation.
 
 ## Operations
 
 ### Read a ticket
 
 ```bash
-curl -s \
-  -H "Authorization: Basic <BASE64>" \
-  -H "Accept: application/json" \
-  "https://<url>/rest/api/3/issue/<TICKET_KEY>"
+npx nova-spec jira get <TICKET-KEY>
 ```
 
-Show the user: key, summary, status (status.name), description, assignee.
+Output is JSON. Extract: `key`, `fields.summary`, `fields.status.name`,
+`fields.description`, `fields.assignee.displayName`.
 
-### List tickets in a project (recent open ones)
+### List transitions for a ticket
 
 ```bash
-curl -s \
-  -H "Authorization: Basic <BASE64>" \
-  -H "Accept: application/json" \
-  "https://<url>/rest/api/3/search?jql=project=<PROJECT>+AND+statusCategory!=Done+ORDER+BY+created+DESC&maxResults=20&fields=summary,status,assignee,priority"
+npx nova-spec jira transitions <TICKET-KEY>
 ```
 
-### Create a ticket
+Use this when `transitions.done` is missing or wrong: it tells you which
+transitions are reachable from the current ticket status, and their IDs.
+
+### Transition a ticket (close as Done from `/nova-wrap`)
 
 ```bash
-curl -s -X POST \
-  -H "Authorization: Basic <BASE64>" \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json" \
-  "https://<url>/rest/api/3/issue" \
-  -d '{
-    "fields": {
-      "project": { "key": "<PROJECT>" },
-      "summary": "<TITLE>",
-      "description": {
-        "type": "doc", "version": 1,
-        "content": [{"type": "paragraph", "content": [{"type": "text", "text": "<DESCRIPTION>"}]}]
-      },
-      "issuetype": { "name": "<TYPE>" }
-    }
-  }'
+npx nova-spec jira transition <TICKET-KEY> <TRANSITION-ID>
 ```
 
-### Transition ticket to Done
+Read `<TRANSITION-ID>` from `novaspec/config.yml` → `jira.transitions.done`.
+Fall back to `jira.done_transition_id` if the structured form is missing.
 
-```bash
-AUTH=$(echo -n "<email>:<token>" | base64)
-curl -s -X POST \
-  -H "Authorization: Basic $AUTH" \
-  -H "Content-Type: application/json" \
-  "https://<url>/rest/api/3/issue/<TICKET-ID>/transitions" \
-  -d "{\"transition\": {\"id\": \"<done_transition_id>\"}}"
-```
+## Error handling
 
-Use `done_transition_id` from `config.yml`. To find your transition IDs:
-```bash
-curl -s -H "Authorization: Basic <BASE64>" "https://<url>/rest/api/3/issue/<ANY-TICKET>/transitions"
-```
+The CLI exits with:
 
-## Notes
+| Code | Meaning | What to do |
+|---|---|---|
+| 0   | Success | Continue |
+| 1   | Generic error (network, parse) | Surface the message; offer manual fallback |
+| 2   | Usage error (missing arg) | Fix the command and retry |
+| 401 | Invalid credentials | Tell user to regenerate `JIRA_API_TOKEN` — **do NOT retry** |
+| 404 | Ticket not found | Confirm the key with the user |
 
-- If `token` is not in config.yml, ask the user to set it.
-- If the project is not specified in the request, use the `project` from config.yml.
-- On HTTP errors (401, 403, 404), show Jira's error message but never expose the token.
+When the CLI prints `✗ Jira 401`, never retry — credentials are wrong.
+
+## Rules
+
+- **Never** paste the token into a `curl` command. The CLI reads it from
+  `JIRA_API_TOKEN` env var via the `${JIRA_API_TOKEN}` reference in `config.yml`.
+- If `JIRA_API_TOKEN` is missing, the CLI fails fast with `✗ JIRA_API_TOKEN env var is not set.`
+- For debugging only (and never with a real token visible), you can build
+  Basic Auth via `AUTH=$(printf '%s' "$JIRA_EMAIL:$JIRA_API_TOKEN" | base64)` —
+  but the CLI is always preferable.

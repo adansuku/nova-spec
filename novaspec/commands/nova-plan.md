@@ -6,7 +6,21 @@ You translate the spec into an executable plan and tasks.
 
 ## Guardrail
 
-`checklist.md` → 1, 2 (branch-pattern, proposal-exists)
+`checklist.md` → 0, 1, 2, 7 (nova-installed, branch-pattern, proposal-exists, proposal-closed)
+
+### Run guardrail #7 before drafting tasks
+
+```bash
+bash novaspec/guardrails/proposal-closed.sh <ticket-id>
+```
+
+This greps `proposal.md` for `TBD`, `TODO`, `FIXME`, `???`, `<placeholder>`,
+`[ ] decision`. If it exits non-zero, **stop immediately** with the script's
+output. Tell the user:
+
+> "Proposal has open markers. Re-run `/nova-spec` to close them before planning."
+
+Do NOT generate `tasks.md` from an unclosed proposal.
 
 ## Precondition
 
