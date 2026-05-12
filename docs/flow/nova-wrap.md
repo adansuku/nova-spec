@@ -92,7 +92,7 @@ If you say "no" to all three prompts, `/nova-wrap` warns: *"we're closing withou
 |---|---|---|
 | `✗ Review not approved` | `review.md` missing the `✓ Ready for /nova-wrap` line | Run `/nova-review` until verdict is `✓` |
 | `gh: command not found` / `glab: command not found` | Forge CLI not installed | Install [`gh`](https://cli.github.com/) or [`glab`](https://gitlab.com/gitlab-org/cli); the command falls back to `git push` + URL |
-| Jira returns 400 on transition | Wrong `transitions.done` ID for your workflow | Run `npx nova-spec jira transitions PROJ-42` to list, update `config.yml` |
+| Jira returns 400 on transition | Wrong `transitions.on_pr` ID for your workflow | Run `npx nova-spec jira transitions PROJ-42` to list reachable transitions, update `config.yml` |
 | Superseded decision still at root | Forgot the `git mv` to `archived/` | The guardrail blocks; move with `git mv` |
 
 ## Customizing it
@@ -100,5 +100,18 @@ If you say "no" to all three prompts, `/nova-wrap` warns: *"we're closing withou
 * PR / MR body → edit `novaspec/templates/pr-body.md`.
 * Commit format → edit `novaspec/templates/commit.md`.
 * When to write a decision (e.g. require one for `architecture` tickets) → edit step 1 of `novaspec/commands/nova-wrap.md`.
-* Different Jira "Done" workflow → `config.yml` → `jira.transitions.done`.
+* Different Jira "Code Review" transition → `config.yml` → `jira.transitions.on_pr`.
 * Switch forge → `config.yml` → `forge.type` (`github` / `gitlab` / `auto` / `none`).
+
+## After /nova-wrap — handling review feedback
+
+When a reviewer requests changes on the open PR, do **not** re-run
+`/nova-wrap`. Use [`/nova-rework`](nova-rework.md) instead — it fetches
+the comments, generates tasks under `## Review fixes (round N)` in
+`tasks.md`, executes them, and pushes a single commit per round. The PR
+updates automatically; the Jira ticket stays in "Code Review".
+
+When the reviewer approves and merges the PR, Jira moves the ticket to
+Done automatically (via its native forge integration). The framework's
+job ends at "PR is mergeable" — Done is owned by the forge integration,
+not nova-spec.

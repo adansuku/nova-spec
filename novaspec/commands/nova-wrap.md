@@ -83,22 +83,48 @@ TERM=$(npx nova-spec forge term)
 
 If `novaspec/config.yml` has `jira.skill` set (and `ticket_system: jira`), invoke the `jira-integration` skill to transition the ticket to "Done".
 
-The transition ID to use is `jira.transitions.done` from `novaspec/config.yml`. If that key is missing, fall back to the legacy `jira.done_transition_id`. The skill (or `npx nova-spec jira transition <TICKET> <id>` directly) handles the API call.
+### 7. Move ticket to "Code Review" in Jira
 
-Confirm to the user: "Ticket <TICKET-ID> marked as Done in Jira ✓"
+Opening a PR means **the work is ready for review**, not done. Move the
+ticket to your "Code Review" (or equivalent) column.
+
+Read the transition ID from `novaspec/config.yml` in this order:
+1. `jira.transitions.on_pr` — preferred
+2. `jira.transitions.done` — legacy fallback (older configs)
+3. `jira.done_transition_id` — even older legacy fallback
+
+Then transition:
+
+```bash
+npx nova-spec jira transition <TICKET-ID> <on_pr-id>
+```
+
+Confirm to the user: "Ticket <TICKET-ID> → Code Review ✓"
+
+> **Important**: nova-spec does NOT move the ticket to Done.
+> When the reviewer approves and the PR is **merged**, your Jira ↔ GitHub /
+> GitLab integration will move the ticket to Done automatically (this is a
+> standard feature of Atlassian's Jira+GitHub / Jira+GitLab apps — you set
+> it up once in your Jira workspace, not per project).
+>
+> If your workspace doesn't have that integration, the ticket stays in
+> "Code Review" until someone moves it manually.
 
 ### 8. Final summary
 
 ```
-## Ticket <TICKET-ID> closed
+## Ticket <TICKET-ID> ready for review
 
 - Spec archived: <path>
 - Decisions created: <list or "none">
 - Gotchas added: <list or "none">
 - Services updated: <list or "none">
 - Commits: <count>
-- PR: <link>
-- Jira: <TICKET-ID> → Done ✓ (or "Jira not configured")
+- PR / MR: <link>
+- Jira: <TICKET-ID> → Code Review ✓ (or "Jira not configured")
+
+Next: a reviewer will look at the PR. If they request changes, run /nova-rework.
+When the PR is merged, Jira will move the ticket to Done automatically.
 ```
 
 ## Rules

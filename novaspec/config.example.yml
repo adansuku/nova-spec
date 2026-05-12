@@ -27,6 +27,11 @@ jira:
   project: PROJ
   email: you@example.com
   token: ${JIRA_API_TOKEN}            # create at id.atlassian.com/manage-profile/security/api-tokens
-  done_transition_id: "41"            # legacy, kept for backward-compat fallback
+
+  done_transition_id: "21"            # legacy fallback (older nova-spec used this name)
+
   transitions:
-    done: "41"                        # structured form — read first by /nova-wrap
+    on_pr: "21"                       # ID of "Code Review" — used by /nova-wrap when PR is opened
+    done:  "21"                       # legacy; nova-spec does NOT move to Done — Jira's
+                                      # native forge integration does that on PR merge.
+                                      # Kept here for backward compatibility only.

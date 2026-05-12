@@ -325,7 +325,32 @@ test('migrateConfig strips inline comments from done_transition_id', () => {
   const out = fs.readFileSync(cfg, 'utf8');
   // Both the legacy key and the new transitions.done must equal "41" — not "41   # was 31..."
   assert.ok(/done_transition_id: "41"/.test(out), `expected clean done_transition_id, got:\n${out}`);
-  assert.ok(/transitions:\s*\n\s*done: "41"/.test(out), `expected clean transitions.done, got:\n${out}`);
+  // After the second migration (rename done → on_pr) runs, both keys exist
+  // with the same value. The comment from the original input must NOT leak
+  // into either captured value.
+  assert.ok(/on_pr: "41"/.test(out), `expected on_pr: "41" (clean value), got:\n${out}`);
+  assert.ok(/\bdone: "41"/.test(out), `expected done: "41" (clean value), got:\n${out}`);
+  assert.ok(!/was 31/.test(out.match(/on_pr: "[^"]*"/)?.[0] || ''), 'comment must not leak into on_pr value');
+  assert.ok(!/was 31/.test(out.match(/\bdone: "[^"]*"/)?.[0] || ''), 'comment must not leak into done value');
+});
+
+// 14b. REGRESSION: migrateConfig adds transitions.on_pr when only transitions.done exists
+test('migrateConfig adds transitions.on_pr mirroring transitions.done', () => {
+  const dir = tmpDir();
+  const cfg = path.join(dir, 'config.yml');
+  fs.writeFileSync(
+    cfg,
+    'jira:\n  transitions:\n    done: "31"\n',
+  );
+  migrateConfig(cfg);
+  const out = fs.readFileSync(cfg, 'utf8');
+  assert.ok(/on_pr: "31"/.test(out), `expected on_pr mirroring done, got:\n${out}`);
+  assert.ok(/\bdone: "31"/.test(out), 'legacy done must remain');
+
+  // Idempotence: running again is a no-op
+  migrateConfig(cfg);
+  const out2 = fs.readFileSync(cfg, 'utf8');
+  assert.strictEqual(out, out2, 'second run must be a no-op');
 });
 
 // 15. REGRESSION: hashFile on a symlink hashes the link target string, not the resolved file
