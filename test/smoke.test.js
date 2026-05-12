@@ -462,5 +462,52 @@ test('refreshRuntimeLinks converts copied dir back to a symlink', () => {
   assert.strictEqual(content, '# start\n', 'symlink must resolve to the live novaspec/ content');
 });
 
+// 21. context-templates module exports all 5 READMEs with substantive content
+test('context-templates exports 5 READMEs with HTML-comment guides', () => {
+  const templates = require('../lib/context-templates.js');
+  const expectedKeys = [
+    'CONTEXT_README',
+    'DECISIONS_README',
+    'ARCHIVED_README',
+    'GOTCHAS_README',
+    'SERVICES_README',
+  ];
+  for (const key of expectedKeys) {
+    assert.ok(typeof templates[key] === 'string', `${key} must be a string`);
+    assert.ok(templates[key].startsWith('<!--'), `${key} must start with an HTML comment`);
+    assert.ok(templates[key].length > 200, `${key} must have substantive content (>200 chars)`);
+  }
+});
+
+// 22. scaffoldContextReadmes is idempotent + creates the 5 READMEs in a fresh dir
+test('scaffoldContextReadmes creates READMEs and is idempotent', () => {
+  const dir = tmpDir();
+  const { scaffoldContextReadmes } = require('../lib/installer.js');
+
+  scaffoldContextReadmes(dir);
+
+  const expected = [
+    'context/README.md',
+    'context/decisions/README.md',
+    'context/decisions/archived/README.md',
+    'context/gotchas/README.md',
+    'context/services/README.md',
+  ];
+  for (const rel of expected) {
+    assert.ok(fs.existsSync(path.join(dir, rel)), `${rel} must be created`);
+  }
+
+  // Idempotence: write user content to one README, run scaffolding again,
+  // confirm user content survives (writeIfMissing semantics)
+  const customPath = path.join(dir, 'context/decisions/README.md');
+  fs.writeFileSync(customPath, '# OUR TEAM CUSTOM CONTENT\n');
+  scaffoldContextReadmes(dir);
+  assert.strictEqual(
+    fs.readFileSync(customPath, 'utf8'),
+    '# OUR TEAM CUSTOM CONTENT\n',
+    'user-edited README must survive re-scaffolding',
+  );
+});
+
 console.log(`\n${pass} passed, ${fail} failed\n`);
 process.exit(fail > 0 ? 1 : 0);

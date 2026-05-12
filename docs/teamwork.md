@@ -41,6 +41,19 @@ If they need a Jira token, they generate their own at [id.atlassian.com](https:/
 
 After init, `JIRA_API_TOKEN=...` in their shell rc and they're ready. First ticket:
 
+### First-time bootstrap (only the very first developer to adopt nova-spec)
+
+When you add nova-spec to an existing repo, `context/` starts empty. The
+team can either populate it ticket-by-ticket (slow payoff) or run
+[`/nova-seed`](flow/nova-seed.md) once to bootstrap it from the existing
+codebase. The seeded files (`stack.md`, `conventions.md`,
+`services/<svc>.md`) get committed to the repo, so every subsequent
+teammate inherits the populated context — they don't need to re-run
+`/nova-seed`.
+
+Subsequent developers just clone, run `init`, and start working with
+the architectural memory already in place.
+
 ```text
 /nova-start <TICKET>
 ```

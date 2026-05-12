@@ -120,9 +120,24 @@ No code yet. The agent classified the ticket, created the branch, and loaded onl
 /nova-build           →  execute tasks one by one
 /nova-review          →  deterministic checks + 4-axis LLM review
 /nova-wrap            →  memory update, archive spec, commit, PR/MR
+/nova-rework          →  apply reviewer feedback rounds, push to existing PR
 ```
 
 Each step blocks the next via a guardrail. See [Flow → Overview](flow/overview.md) for the full graph including which skills and agents each command invokes.
+
+### Bootstrapping an existing codebase
+
+If you installed nova-spec on a repo that **already has code**, the
+`context/` directory is empty after init. You have two options:
+
+1. **Recommended: run `/nova-seed`** once. It scans your repo, drafts
+   `stack.md`, `conventions.md`, and a `context/services/<svc>.md` per
+   detected service. You approve each draft. Takes 15-30 minutes. See
+   [`/nova-seed`](flow/nova-seed.md).
+2. **Or let the memory grow ticket-by-ticket** via `/nova-wrap`. Slower
+   payoff (useful only after a few months), but no upfront work.
+
+For greenfield projects, skip `/nova-seed` — there's nothing to scan yet.
 
 ## 6. Stay up to date
 
