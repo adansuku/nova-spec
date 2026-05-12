@@ -14,8 +14,9 @@ For every file in the new package shipment:
 |---|---|
 | File doesn't exist on disk | Create it. Record `newStockHash` in manifest. |
 | `currentHash == newStockHash` | No-op. Already up to date. |
-| `currentHash == previousShippedHash` | User hasn't touched it since last sync. Overwrite. Record `newStockHash`. |
-| `currentHash != previousShippedHash` | User edited it. **Skip.** Keep `previousShippedHash` in manifest. |
+| `previousShippedHash` exists AND `currentHash == previousShippedHash` | User hasn't touched it since last sync. Overwrite. Record `newStockHash`. |
+| `previousShippedHash` exists AND `currentHash != previousShippedHash` | User edited it. **Skip.** Keep `previousShippedHash` in manifest. |
+| `previousShippedHash` is **missing** (corrupt / deleted manifest, file added by user) | **Skip — conservative mode.** Treat as user-owned. |
 
 For files that were **removed upstream** (in old manifest but not in new package):
 
@@ -25,25 +26,60 @@ For files that were **removed upstream** (in old manifest but not in new package
 | `currentHash == previousShippedHash` | User didn't touch it. Delete. |
 | `currentHash != previousShippedHash` | User edited it. **Keep.** Warn. |
 
-That's it. Six cases, two layers (existing files + removed files).
+That's it. Seven cases, two layers (existing files + removed files).
+
+### Conservative mode in detail
+
+When the manifest entry for a file is missing (the file exists on disk but
+nothing in `.nova-manifest.json` mentions it), sync cannot tell whether the
+content is a user-created file or a stale upstream-shipped file. It refuses
+to overwrite, preserving the disk content. This kicks in when:
+
+- The user deleted `.nova-manifest.json` (e.g. to "force a clean resync").
+- The manifest was corrupted (`readManifest` backed it up and replaced it
+  with an empty `{ files: {} }`).
+- A merge conflict on the manifest was resolved to "delete".
+- The file was added by the user manually and shares a name with something
+  upstream later shipped.
+
+The reporting tag is the same `⚠ NOT updated (you have local edits)` —
+indistinguishable from a "real" edit at sync time. Recovery: pick `[R]
+Replace with the package version` via `/nova-diff <path>` for each file
+the user wants reset.
 
 ## The implementation
 
 `lib/sync.js` exports `sync(destDir)` which orchestrates the flow:
 
 ```text
-1. readManifest()                      ← load last-shipped hashes from disk
+1. readManifest()                      ← load last-shipped hashes; corrupt JSON
+                                         is backed up to .corrupt.<ts> and the
+                                         function returns an empty manifest
+                                         (kicks conservative mode below)
 2. collectPackageFiles(packageRoot)    ← walk the npm package's novaspec/ + framework files
-3. for each (relPath, srcAbs) in package files:
+3. migrateConfig(configPath)           ← idempotent yaml migrations BEFORE
+                                         touching state, so a migration crash
+                                         can't leave a stale manifest
+4. for each (relPath, srcAbs) in package files:
        resolve currentHash, previousShippedHash, newStockHash
-       apply the decision matrix
-4. for each relPath in old manifest but not in new sources:
+       apply the decision matrix (conservative mode skips when manifest is missing)
+5. for each relPath in old manifest but not in new sources:
        check if removed-upstream rules say keep / delete
-5. writeManifest()                     ← regenerate. For skipped files, KEEP old hash.
-6. migrateConfig(configPath)           ← idempotent yaml migrations
-7. ensureSessionStartHook(destDir)     ← refresh hook command if changed
-8. printReport()                       ← +new / ↻updated / ⚠skipped / −removed
+6. writeManifest()                     ← writeAtomic (tmp + rename). For
+                                         skipped files, KEEP old hash so future
+                                         syncs still see them as edited.
+7. refreshRuntimeLinks(destDir)        ← re-link .claude/{commands,skills,agents}
+                                         if a Windows install fell back to copies
+8. ensureSessionStartHook(destDir)     ← refresh hook + dedupe legacy hooks
+                                         (any `npx nova-spec[@<tag>] sync` entry
+                                         is replaced with one canonical)
+9. printReport()                       ← +new / ↻updated / ⚠skipped / −removed
 ```
+
+Every state-modifying write goes through `writeAtomic(path, content)` —
+write to `<path>.tmp.<pid>.<timestamp>`, then `renameSync`. So a SIGKILL
+or disk-full mid-write never leaves a half-written manifest or
+`settings.local.json`.
 
 ## Why "keep old hash for skipped files"
 
