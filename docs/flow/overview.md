@@ -4,11 +4,15 @@ description: How nova-spec commands, skills, agents and guardrails connect end t
 
 # Flow overview
 
-nova-spec is nine slash commands plus a small set of supporting pieces. This page is the map.
+nova-spec is eleven slash commands plus a small set of supporting pieces. This page is the map.
 
 ## The happy path
 
 ```text
+(optional one-time, after install on an existing codebase)
+/nova-seed
+       │
+       ▼
 /nova-start TICKET
        │
        ├─► context-loader (agent)         ── reads stack.md, conventions.md, services, decisions, gotchas
@@ -40,7 +44,29 @@ nova-spec is nine slash commands plus a small set of supporting pieces. This pag
        ├─► write-decision (skill)         ── if real architectural decision was made
        ├─► update-service-context (skill) ── if a service's public interface changed
        ├─► forge (CLI)                    ── npx nova-spec forge pr-command  →  gh pr create | glab mr create
-       └─► jira-integration (skill)       ── transition ticket to Done
+       └─► jira-integration (skill)       ── transition ticket to "Code Review"
+       │
+       ▼
+PR open, ticket in "Code Review"
+       │
+       │   ┌────────────────────────────────────────┐
+       │   │  Reviewer requests changes             │
+       │   ▼                                        │
+       │   /nova-rework                             │
+       │   │                                        │
+       │   ├─► fetch PR comments (gh / glab)        │
+       │   ├─► generate "## Review fixes (round N)" │
+       │   ├─► execute tasks (like /nova-build)     │
+       │   └─► commit + push (PR updates, no new PR)│
+       │   │                                        │
+       │   └─loop until reviewer approves ──────────┘
+       │
+       ▼
+Reviewer approves + merges PR
+       │
+       └─► Jira's native forge integration moves ticket to "Done"
+           (nova-spec does NOT do this — it's Atlassian's Jira+GitHub
+           or Jira+GitLab app, configured once at workspace level)
 ```
 
 `quick-fix` tickets skip `/nova-spec` and `/nova-plan`.
@@ -50,13 +76,34 @@ nova-spec is nine slash commands plus a small set of supporting pieces. This pag
 | Command | Type | When |
 |---|---|---|
 | [`/nova-status`](nova-status.md) | read-only | Anytime, to inspect where a ticket is |
-| `/nova-diff <path>` | read-only | After a sync flagged a file as "you edited it" |
-| `/nova-sync` | maintenance | Manually trigger what the SessionStart hook does on its own |
+| [`/nova-diff <path>`](nova-diff.md) | read-only | After a sync flagged a file as "you edited it" |
+| [`/nova-sync`](nova-sync.md) | maintenance | Manually trigger what the SessionStart hook does on its own |
+| [`/nova-rework`](nova-rework.md) | post-PR | Apply reviewer feedback after `/nova-wrap` — fetches comments, executes fixes, pushes |
+| [`/nova-seed`](nova-seed.md) | bootstrap | One-time, on adopting nova-spec on an existing codebase — populates `context/` |
+
+## Team-specific skills (`/jira`, `/gitlab`)
+
+Two skills cover everything around the formal `/nova-*` flow:
+
+| Command | Skill | What it does |
+|---|---|---|
+| [`/jira show <TICKET>`](../integrations/jira.md) | `jira-integration` | Show ticket details (formatted) |
+| [`/jira list`](../integrations/jira.md) | `jira-integration` | Your open tickets |
+| [`/jira improve <TICKET>`](../integrations/jira.md) | `jira-integration` | Detect quality gaps, ask 2-4 questions, update the ticket in Jira |
+| [`/jira comment <TICKET>`](../integrations/jira.md) | `jira-integration` | Add a comment |
+| [`/gitlab create`](../integrations/gitlab.md) | `gitlab` | Create MR with team-specific template, squash, target branch from config |
+| [`/gitlab review <ID>`](../integrations/gitlab.md) | `gitlab` | Review an MR — fetch, comment, approve |
+| [`/gitlab pipeline`](../integrations/gitlab.md) | `gitlab` | Pipeline status for current branch |
+| [`/gitlab list` / `my` / `assigned`](../integrations/gitlab.md) | `gitlab` | List MRs |
+| [`/gitlab branch <TICKET>`](../integrations/gitlab.md) | `gitlab` | Create branch from a Jira ticket (alternative to `/nova-start`) |
+| [`/gitlab merge <ID>`](../integrations/gitlab.md) | `gitlab` | Merge an MR (squash) |
+
+The same `jira-integration` skill is also used **automatically** by `/nova-start` (to fetch tickets) and `/nova-wrap` (to transition to Code Review). One skill, two modes — see [Integrations → Jira](../integrations/jira.md).
 
 ## Pieces in one paragraph
 
 * **Commands** (`novaspec/commands/*.md`) — markdown with imperative instructions for the agent. One per `/nova-*` slash command.
-* **Skills** (`novaspec/skills/<name>/SKILL.md`) — reusable units invoked by commands. Four ship: `close-requirement`, `jira-integration`, `write-decision`, `update-service-context`.
+* **Skills** (`novaspec/skills/<name>/SKILL.md`) — reusable units invoked by commands. Five ship: `close-requirement`, `jira-integration` (Jira: framework primitives + rich agentic ops), `gitlab` (full GitLab MR / pipeline workflow), `write-decision`, `update-service-context`.
 * **Agents** (`novaspec/agents/*.md`) — sub-agents that run in their own context window. Two ship: `context-loader` (loads memory at `/nova-start`) and `nova-review-agent` (runs the review).
 * **Guardrails** (`novaspec/guardrails/`) — deterministic preconditions. `checklist.md` lists 7 invariants; `proposal-closed.sh` and `review-checks.sh` are bash scripts that exit non-zero to block.
 * **Templates** (`novaspec/templates/*.md`) — starting shapes for `proposal.md`, `tasks.md`, `commit.md`, `pr-body.md`, `review.md`, `status-report.md`, `ticket-summary.md`.

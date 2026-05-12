@@ -79,7 +79,7 @@ No code yet. The agent classified the work, created the branch, and pulled in on
 ## Flow
 
 ```
-/nova-start → /nova-spec → /nova-plan → /nova-build → /nova-review → /nova-wrap
+/nova-start → /nova-spec → /nova-plan → /nova-build → /nova-review → /nova-wrap → /nova-rework (if review feedback)
 ```
 
 | Command | What it does |
@@ -89,12 +89,32 @@ No code yet. The agent classified the work, created the branch, and pulled in on
 | `/nova-plan` | Translates the spec into `tasks.md` (plan + tasks) |
 | `/nova-build` | Executes tasks one by one with incremental review |
 | `/nova-review` | Final code review against spec, conventions and decisions |
-| `/nova-wrap` | Updates memory, archives the spec, creates commit and PR |
+| `/nova-wrap` | Updates memory, archives the spec, creates commit and PR — moves Jira to **Code Review** |
+| `/nova-rework` | Apply reviewer feedback rounds after PR is open — pushes to existing PR |
 | `/nova-status [TICKET]` | Current status of the ticket (read-only) |
 | `/nova-sync` | Updates nova-spec core to the latest version |
 | `/nova-diff <path>` | Shows diff between your local edits and the latest package version |
+| `/nova-seed` | **One-time** bootstrap of `context/` (stack, conventions, services) from an existing codebase |
 
-`quick-fix` tickets skip `/nova-spec` and `/nova-plan`.
+`quick-fix` tickets skip `/nova-spec` and `/nova-plan`. **Jira ticket reaches "Done" automatically when the PR merges** via Jira's native GitHub / GitLab integration — nova-spec doesn't do that step.
+
+### Team-specific helpers (Jira + GitLab)
+
+Two skills are bundled for everything around the `/nova-*` flow:
+
+| Command | What it does |
+|---|---|
+| `/jira show <TICKET>` | Show ticket details (formatted) |
+| `/jira list` | Your open tickets |
+| `/jira improve <TICKET>` | Detect quality gaps, ask 2-4 questions, update the ticket in Jira |
+| `/jira comment <TICKET>` | Add a comment |
+| `/gitlab create` | Create MR with team-specific body template |
+| `/gitlab review <ID>` | Review an MR — fetch, comment, approve |
+| `/gitlab pipeline` | Pipeline status for current branch |
+| `/gitlab list` / `my` / `assigned` | List MRs |
+| `/gitlab merge <ID>` | Merge an MR |
+
+The same `jira-integration` skill that powers `/nova-start` and `/nova-wrap` also exposes `/jira` for ad-hoc operations. Details: [Jira integration](https://adansuku.github.io/nova-spec/integrations/jira) and [GitLab integration](https://adansuku.github.io/nova-spec/integrations/gitlab).
 
 ## Customizing the framework
 
