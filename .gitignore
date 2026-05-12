@@ -67,7 +67,8 @@ notes.md
 
 # Architectural memory: only meaningful in CONSUMER repos.
 # In the source repo, whatever's here is test data.
-context/
+# (leading slash anchors to repo root so `lib/templates/context/` is NOT ignored)
+/context/
 
 # Personal Jira / forge config (per dev)
 novaspec/config.yml
