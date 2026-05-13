@@ -44,9 +44,11 @@ export default defineConfig({
           { text: '/nova-build', link: '/flow/nova-build' },
           { text: '/nova-review', link: '/flow/nova-review' },
           { text: '/nova-wrap', link: '/flow/nova-wrap' },
+          { text: '/nova-rework', link: '/flow/nova-rework' },
           { text: '/nova-status', link: '/flow/nova-status' },
           { text: '/nova-sync', link: '/flow/nova-sync' },
           { text: '/nova-diff', link: '/flow/nova-diff' },
+          { text: '/nova-seed', link: '/flow/nova-seed' },
         ],
       },
 
@@ -68,7 +70,8 @@ export default defineConfig({
         collapsed: true,
         items: [
           { text: 'Jira', link: '/integrations/jira' },
-          { text: 'Forge (GitHub & GitLab)', link: '/integrations/forge' },
+          { text: 'GitLab (rich skill)', link: '/integrations/gitlab' },
+          { text: 'Forge (GitHub & GitLab — generic)', link: '/integrations/forge' },
         ],
       },
 

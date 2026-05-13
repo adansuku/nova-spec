@@ -14,6 +14,9 @@ Affected services: `$ARGUMENTS` (space-separated list)
 ## Hard rules
 
 - **Never read `context/decisions/archived/`**. It's a trash bin; its content is explicitly out of the live scope.
+- **Skip `README.md` in any `context/` subdirectory.** Those files are
+  onboarding guides for the developer (what goes in each folder), not
+  facts to load into the agent's context.
 - **Total budget: ≤3000 tokens**. If summing the chosen files gets close to the cap, trim by relevance. Don't load all of `decisions/` — only the 3-5 files whose names match the ticket scope.
 - Don't write any file.
 - Don't make up context.
@@ -50,7 +53,8 @@ For each service in `$ARGUMENTS`:
 
 - `ls context/decisions/` (no `-R`, doesn't enter `archived/`).
 - `ls context/gotchas/`.
-- Pick 3-5 files from each whose name is relevant to the ticket's scope or affected services. Don't force connections.
+- **Exclude `README.md` and any file starting with uppercase** — those are dev-facing guides, not facts.
+- Pick 3-5 files from each remaining list whose name is relevant to the ticket's scope or affected services. Don't force connections.
 - Read the chosen ones.
 
 ### 5. Return summary

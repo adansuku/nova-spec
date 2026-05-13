@@ -34,38 +34,67 @@ jira:
   project: PROJ                                # default project key
   email: you@example.com                       # the email tied to the token
   token: ${JIRA_API_TOKEN}                     # env-var reference
-  done_transition_id: "41"                     # legacy, kept for compatibility
+
+  done_transition_id: "21"                     # legacy, kept for compatibility
+
   transitions:
-    done: "41"                                 # used by /nova-wrap
+    on_pr: "21"                                # used by /nova-wrap → "Code Review"
+    done:  "21"                                # legacy; nova-spec does NOT move
+                                               # to Done (see below)
 ```
 
 If you ran `npx nova-spec init` and chose Jira, this is generated for you.
 
-### 4. Discover the right `done` transition
+### 4. Discover the right `on_pr` (Code Review) transition
 
-Workflow transition IDs are workflow-specific — `41` is from Atlassian's sandbox and almost certainly wrong for your instance. Run:
+Workflow transition IDs are workflow-specific. Run:
 
 ```bash
 npx nova-spec jira transitions PROJ-1
 ```
 
-This prints every transition available from the current status of `PROJ-1` (so the ticket needs to be in a state where "Done" is reachable). Pick the one named "Done" / "Cerrado" / "Closed" and put its ID in `transitions.done`.
+This prints every transition reachable from the current status of `PROJ-1`. Pick the one that takes the ticket to your **"Code Review"** column (sometimes named "In Review", "Review", "Pull Request Open", etc.) and put its ID in `transitions.on_pr`.
 
 The installer offers to do this interactively at the end of `init` if `JIRA_API_TOKEN` is in your env.
 
-## Operations
+### Important: nova-spec does NOT move the ticket to Done
 
-The CLI subcommand wraps three operations:
+`/nova-wrap` moves the ticket to **"Code Review"** when the PR opens. It
+**never** moves it to Done. The Done transition is owned by Jira's
+native forge integration:
+
+```text
+You merge the PR  →  GitHub / GitLab notifies Jira (because the PR
+                     mentions the ticket key in its branch name)
+                  →  Jira moves the ticket to Done automatically
+```
+
+This integration is a standard feature of Atlassian's **Jira+GitHub** /
+**Jira+GitLab** apps. It's set up once at the workspace level (Jira
+admin → Apps → connect to your GitHub org or GitLab group), not per
+project.
+
+**If your workspace doesn't have it set up**, the ticket stays in
+"Code Review" after the PR merges. Someone moves it to Done manually.
+That's fine — the framework's job ends at "PR is mergeable".
+
+## The skill: two modes in one
+
+Everything Jira-related goes through a single skill: `novaspec/skills/jira-integration/SKILL.md`. It has two modes of operation:
+
+### Framework mode (automatic — used by `/nova-*` commands)
+
+The framework's slash commands invoke the deterministic CLI behind the scenes. Tokens are never visible to the LLM — they live inside the Node process and go straight to the `Authorization` header.
 
 ```bash
-# Read a ticket
+# Read a ticket (used by /nova-start)
 npx nova-spec jira get PROJ-42
 
 # List available transitions for a ticket
 npx nova-spec jira transitions PROJ-42
 
-# Transition a ticket (e.g. close it)
-npx nova-spec jira transition PROJ-42 41
+# Transition a ticket (used by /nova-wrap → "Code Review")
+npx nova-spec jira transition PROJ-42 21
 ```
 
 Output is JSON. Exit codes are deterministic:
@@ -78,16 +107,55 @@ Output is JSON. Exit codes are deterministic:
 | 401 | Invalid credentials |
 | 404 | Ticket not found |
 
-The skill (`novaspec/skills/jira-integration/SKILL.md`) tells the agent to use this CLI rather than building `curl` calls by hand. Tokens are never visible to the LLM.
+### User mode (interactive — invoke directly)
+
+For ad-hoc operations the skill exposes slash commands you can invoke yourself:
+
+```text
+/jira                    # interactive menu
+/jira show <TICKET>      # show ticket details (formatted)
+/jira list               # your open tickets
+/jira improve <TICKET>   # detect quality gaps, ask 2-4 questions, update via API
+/jira comment <TICKET>   # add a comment
+/jira transitions <TICKET>  # list reachable transitions (debug)
+```
+
+The headline feature is **`/jira improve`** — when you have a vague ticket and want to bring it up to scratch, the skill:
+
+1. Reads the ticket via the safe CLI.
+2. Evaluates 5 quality criteria: description substance, acceptance criteria, scope clarity, success metric, technical context.
+3. Cross-references with your repo's `context/services/` and `context/decisions/` to detect what the ticket should mention but doesn't.
+4. Asks you 2-4 trade-off questions to fill the gaps.
+5. Drafts an improved description (Atlassian Document Format).
+6. Shows you a diff and asks for confirmation.
+7. PUTs the new description to Jira.
+
+You can then run `/nova-start <TICKET>` to begin the formal flow on a properly-specified ticket.
+
+### What the skill explicitly does NOT include
+
+`create`, `analyze`, and `plan` are omitted on purpose:
+
+- **Create a ticket** → use the Jira UI; ticket creation is rare and tooling adds little.
+- **Analyze ticket + repo** → use `/nova-start` + `/nova-spec`. The `close-requirement` skill does the same work with stricter discipline (forces decisions to be closed before writing the spec).
+- **Plan implementation** → use `/nova-spec` + `/nova-plan`. The formal flow writes a real `proposal.md` and `tasks.md` instead of a one-shot draft.
+
+This split keeps the framework's flow as the canonical path for new work and the `jira` skill as the supporting tool for everything around it.
 
 ## How commands use it
 
 | Command | Operation |
 |---|---|
-| `/nova-start <TICKET>` | `jira get <TICKET>` to fetch title/description/AC |
-| `/nova-wrap` | `jira transition <TICKET> <transitions.done>` to close the ticket |
+| `/nova-start <TICKET>` | `jira get <TICKET>` (auto, via CLI) |
+| `/nova-wrap` | `jira transition <TICKET> <transitions.on_pr>` → "Code Review" (auto) |
+| `/jira show <TICKET>` | `jira get` + formatted output |
+| `/jira list` | curl to `/rest/api/3/search` with `assignee=currentUser()` |
+| `/jira improve <TICKET>` | `jira get` + interactive Q&A + PUT description |
+| `/jira comment <TICKET>` | POST to `/rest/api/3/issue/<KEY>/comment` |
 
-Both bifurcate on `ticket_system`. If it's `none`, neither call is made.
+Framework operations bifurcate on `ticket_system`. If it's `none`, neither `/nova-start`'s fetch nor `/nova-wrap`'s transition runs.
+
+User-mode operations work regardless of `ticket_system` — they're invoked manually.
 
 ## Errors and fixes
 

@@ -10,17 +10,22 @@ The memory model is the part of nova-spec that survives tool churn. Markdown fil
 
 ```text
 context/
+├── README.md                # explains this whole map — scaffolded by init
 ├── stack.md                 # tech stack — loaded every ticket
 ├── conventions.md           # patterns and house rules — loaded every ticket
 ├── decisions/               # why we did X (one fact = one file)
+│   ├── README.md            # scaffolded — explains decision format + supersede flow
 │   ├── throttling-strategy.md
 │   ├── redis-usage.md
 │   └── archived/            # superseded — never auto-loaded
+│       ├── README.md        # scaffolded — explains "never delete, archive"
 │       └── old-rate-limit.md
 ├── gotchas/                 # non-obvious traps
+│   ├── README.md            # scaffolded — explains what qualifies as a gotcha
 │   ├── redis-key-collision.md
 │   └── timezone-on-write.md
 ├── services/                # one file per service, ≤80 lines, replace not accumulate
+│   ├── README.md            # scaffolded — explains ≤80 lines rule
 │   ├── auth-api.md
 │   └── billing-api.md
 ├── changes/
@@ -33,6 +38,38 @@ context/
 │       └── PROJ-41/...
 └── backlog/                 # pending proposals (gitignored by default)
 ```
+
+### The scaffolded `README.md` files
+
+`npx nova-spec init` creates a `README.md` in each subdirectory with an
+HTML-comment guide explaining what goes there and a suggested structure.
+A new developer opening `context/decisions/` immediately sees the rules
+without having to read external docs. If your team customizes a README,
+sync preserves the edit via hash-compare.
+
+The `context-loader` agent **skips every `README.md`** when picking
+decisions or gotchas to load — they're onboarding artifacts, not facts.
+
+If you need to backfill these READMEs into an install that predates them,
+just run `npx nova-spec sync` once — the sync routine adds any missing
+ones (via the `scaffoldContextReadmes` helper) without touching the
+ones you've edited.
+
+## Bootstrapping memory on an existing codebase
+
+After `npx nova-spec init` on a repo with existing code, `context/` is
+empty (just READMEs + scaffolded templates). Two ways to populate:
+
+1. **Manual** — write `stack.md`, `conventions.md`, and each
+   `services/<svc>.md` by hand. Slow but precise.
+2. **Recommended: `/nova-seed`** — agent scans the repo, drafts each
+   file from your `package.json`, linter configs, source structure.
+   You approve each draft. 15-30 minutes.
+
+See [`/nova-seed`](../flow/nova-seed.md) for the full flow.
+
+For greenfield projects, skip this step entirely. The memory grows
+naturally via `/nova-wrap` as you ship tickets.
 
 ## The four golden rules
 

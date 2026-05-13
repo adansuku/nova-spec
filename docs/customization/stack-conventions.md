@@ -13,6 +13,10 @@ context/conventions.md   ← what patterns and "we don't do that here"
 
 The installer creates both with HTML-comment guides explaining what to put inside. They're not required (the framework still works without them), but they remove 80% of the "explain my project to the agent every time" friction.
 
+> **Don't want to fill them by hand?** Run [`/nova-seed`](../flow/nova-seed.md) once. It scans your codebase and drafts both files (plus `context/services/<svc>.md`) from your `package.json`, linter configs, and source structure. You approve each draft. Takes 15-30 minutes.
+
+> **Where do the subdirectory README files come from?** `npx nova-spec init` scaffolds a `README.md` in each `context/` subfolder (`decisions/`, `gotchas/`, `services/`, `decisions/archived/`) with an HTML-comment guide and a suggested file structure. The `context-loader` agent skips these READMEs when loading memory — they exist for human onboarding only.
+
 ## stack.md
 
 Purpose: tell the agent what languages, frameworks, runtimes, and key dependencies you use. Versions matter; philosophy doesn't.

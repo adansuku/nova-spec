@@ -173,17 +173,20 @@ The forge CLI for your repo isn't installed.
 
 **Fix**: install it ([gh](https://cli.github.com/), [glab](https://gitlab.com/gitlab-org/cli)) and authenticate. Or set `forge.type: none` in config and push manually.
 
-### Jira returns 400 on the close transition
+### Jira returns 400 on the "Code Review" transition
 
-The `transitions.done` ID is wrong for the current ticket state.
+The `transitions.on_pr` ID is wrong for the current ticket state.
 
 **Fix**:
 ```bash
 npx nova-spec jira transitions <TICKET-KEY>
 ```
-Pick the right transition by name, update `jira.transitions.done` in config.
+Pick the transition that takes the ticket to your "Code Review" (or
+equivalent) column. Update `jira.transitions.on_pr` in config.
 
-Note: the transition must be **available from the current ticket status**. If the ticket is in "Backlog", "Done" might not be reachable directly — your workflow may require it to pass through "In Review" first.
+Note: the transition must be **available from the current ticket status**. If the ticket is in "Backlog", "Code Review" might not be reachable directly — your workflow may require it to pass through "In Progress" first.
+
+> nova-spec does NOT move the ticket to Done. The Done transition is owned by Jira's native forge integration on PR merge. See [Integrations → Jira](integrations/jira.md).
 
 ### Superseded decision still at root
 
@@ -193,6 +196,47 @@ You wrote `> Supersedes: <X>.md` in a new decision but didn't archive `<X>.md`.
 ```bash
 git mv context/decisions/<X>.md context/decisions/archived/<X>.md
 ```
+
+## Post-PR / Review iteration
+
+### Reviewer asked for changes — how do I respond?
+
+**Fix**: use [`/nova-rework`](flow/nova-rework.md). It fetches PR comments via `gh` / `glab`, generates a `## Review fixes (round N)` section in `tasks.md`, executes the fixes one by one, commits, and pushes to the existing branch. The PR updates automatically.
+
+```text
+/nova-rework
+```
+
+Or pass the feedback inline if `gh` / `glab` isn't auth'd:
+
+```text
+/nova-rework "usar Result<T,E> en lugar de throw, y añadir test para email vacío"
+```
+
+### Don't re-run `/nova-wrap` after review changes
+
+`/nova-wrap` creates a PR. If you run it again with the PR already open, it tries to create a SECOND PR. Use `/nova-rework` instead.
+
+### Jira ticket stuck in "Code Review" after merge
+
+Your Jira workspace doesn't have the GitHub / GitLab integration set up. Two options:
+
+1. Set up the integration once at the Jira admin level (free Atlassian app). After that, every merge auto-transitions to Done.
+2. Move the ticket to Done manually after merge. nova-spec's job ends at "PR mergeable".
+
+## Bootstrap
+
+### `/nova-seed` doesn't detect my services
+
+The detection heuristics didn't match your repo layout.
+
+**Fix**: pass the paths explicitly:
+
+```text
+/nova-seed src/auth-api,src/billing,src/notifications
+```
+
+Or, for very non-standard layouts, write `context/services/<svc>.md` by hand for each service. The framework works fine without `/nova-seed`.
 
 ## Sync
 
